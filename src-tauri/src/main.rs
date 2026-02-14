@@ -2,9 +2,9 @@
 
 use std::process::Command;
 
-fn nix_search_sync(query: &str) -> Result<String, String> {
+fn nix_search_sync(query: &str, system: &str) -> Result<String, String> {
     let output = Command::new("nix")
-        .args(["search", "nixpkgs", query, "--json"])
+        .args(["search", "nixpkgs", query, "--json", "--system", system])
         .output()
         .map_err(|e| format!("Failed to execute nix search: {}", e))?;
 
@@ -81,8 +81,8 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-async fn nix_search(query: String) -> Result<String, String> {
-    tokio::task::spawn_blocking(move || nix_search_sync(&query))
+async fn nix_search(query: String, system: String) -> Result<String, String> {
+    tokio::task::spawn_blocking(move || nix_search_sync(&query, &system))
         .await
         .map_err(|e| format!("Task join error: {}", e))?
 }

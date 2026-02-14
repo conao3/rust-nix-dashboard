@@ -20,6 +20,8 @@ import {
   TreeView,
   TreeViewItem,
   TreeViewItemContent,
+  Picker,
+  PickerItem,
 } from "@react-spectrum/s2";
 import Copy from "@react-spectrum/s2/icons/Copy";
 import Checkmark from "@react-spectrum/s2/icons/Checkmark";
@@ -35,18 +37,41 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+const SYSTEMS = [
+  { value: "x86_64-linux", label: "x86_64-linux" },
+  { value: "aarch64-linux", label: "aarch64-linux" },
+  { value: "x86_64-darwin", label: "x86_64-darwin" },
+  { value: "aarch64-darwin", label: "aarch64-darwin" },
+] as const;
+
 const searchForm = z.object({
   query: z.string().min(1),
+  system: z.enum([
+    "x86_64-linux",
+    "aarch64-linux",
+    "x86_64-darwin",
+    "aarch64-darwin",
+  ]),
 });
 
 type SearchForm = z.infer<typeof searchForm>;
 
-const searchFormDefaultValue = {
+function getStoredSystem(): SearchForm["system"] {
+  if (typeof window === "undefined") return "x86_64-linux";
+  const stored = localStorage.getItem("nix-search-system");
+  if (stored && SYSTEMS.some((s) => s.value === stored)) {
+    return stored as SearchForm["system"];
+  }
+  return "x86_64-linux";
+}
+
+const searchFormDefaultValue: SearchForm = {
   query: "",
+  system: getStoredSystem(),
 };
 
 type SearchFormProps = {
-  onSearch: (query: string) => void;
+  onSearch: (params: { query: string; system: string }) => void;
   isFetching: boolean;
 };
 
@@ -122,7 +147,7 @@ type CopyButtonProps = {
 function CopyButton(props: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = async () => {
+  async function copyToClipboard() {
     try {
       await navigator.clipboard.writeText(props.command);
       setCopied(true);
@@ -132,7 +157,7 @@ function CopyButton(props: CopyButtonProps) {
     } catch (err) {
       console.error("Failed to copy:", err);
     }
-  };
+  }
 
   return (
     <TooltipTrigger>
@@ -191,13 +216,13 @@ function PackageDetail(props: PackageDetailProps) {
     env: `nix-env -iA nixpkgs.${packageName}`,
   };
 
-  const extractPackageName = (path: string) => {
+  function extractPackageName(path: string) {
     const parts = path.split("/");
     const lastPart = parts[parts.length - 1];
     return lastPart.replace(/^[a-z0-9]+-/, "").replace(/\.drv$/, "");
-  };
+  }
 
-  const buildDependencyTree = (drvResult: NixDerivationShowResult) => {
+  function buildDependencyTree(drvResult: NixDerivationShowResult) {
     if (!drvResult) return null;
 
     const drvEntries = Object.entries(drvResult);
@@ -232,7 +257,7 @@ function PackageDetail(props: PackageDetailProps) {
         })}
       </TreeViewItem>
     );
-  };
+  }
 
   return (
     <div className="w-96 flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-auto">
@@ -504,7 +529,8 @@ function SearchForm(props: SearchFormProps) {
     },
     onSubmit: async ({ value }) => {
       if (!value.query.trim()) return;
-      props.onSearch(value.query);
+      localStorage.setItem("nix-search-system", value.system);
+      props.onSearch({ query: value.query, system: value.system });
     },
   });
 
@@ -527,10 +553,11 @@ function SearchForm(props: SearchFormProps) {
           }}
         >
           {(field) => (
-            <div className="flex-1">
+            <div className="flex flex-1 flex-col justify-end">
               <TextField
                 aria-label="Search packages"
                 placeholder="Search nixpkgs..."
+                label="Search packages"
                 value={field.state.value}
                 onChange={field.handleChange}
                 isInvalid={!field.state.meta.isValid}
@@ -538,6 +565,32 @@ function SearchForm(props: SearchFormProps) {
                   .map((e) => e?.message)
                   .join(", ")}
               />
+            </div>
+          )}
+        </form.Field>
+        <form.Field
+          name="system"
+          validators={{
+            onDynamic: searchForm.shape.system,
+          }}
+        >
+          {(field) => (
+            <div className="flex flex-col justify-end">
+              <Picker
+                label="System"
+                value={field.state.value}
+                onChange={(key) => {
+                  if (key !== null) {
+                    field.handleChange(String(key) as SearchForm["system"]);
+                  }
+                }}
+              >
+                {SYSTEMS.map((sys) => (
+                  <PickerItem key={sys.value} id={sys.value}>
+                    {sys.label}
+                  </PickerItem>
+                ))}
+              </Picker>
             </div>
           )}
         </form.Field>
@@ -561,7 +614,10 @@ function SearchForm(props: SearchFormProps) {
 }
 
 function Index() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams, setSearchParams] = useState<{
+    query: string;
+    system: string;
+  } | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | undefined>();
 
   const {
@@ -569,14 +625,16 @@ function Index() {
     error,
     isFetching,
   } = useQuery({
-    queryKey: ["nix-search", searchQuery],
+    queryKey: ["nix-search", searchParams?.query, searchParams?.system],
     queryFn: async () => {
+      if (!searchParams) return {};
       const resultJson = await invoke<string>("nix_search", {
-        query: searchQuery,
+        query: searchParams.query,
+        system: searchParams.system,
       });
       return JSON.parse(resultJson) as NixSearchResults;
     },
-    enabled: !!searchQuery && searchQuery.trim().length > 0,
+    enabled: !!searchParams && searchParams.query.trim().length > 0,
   });
 
   const items = useMemo(
@@ -598,7 +656,7 @@ function Index() {
 
   return (
     <div className="flex min-h-0 w-full max-w-4xl flex-1 flex-col gap-6">
-      <SearchForm onSearch={setSearchQuery} isFetching={isFetching} />
+      <SearchForm onSearch={setSearchParams} isFetching={isFetching} />
 
       {isFetching && (
         <div className="flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">

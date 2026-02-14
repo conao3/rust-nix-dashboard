@@ -414,6 +414,7 @@ export async function invoke<T>(
   if (!("__TAURI_INTERNALS__" in window)) {
     if (cmd === "nix_search") {
       await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log("Mock search with system:", args?.system);
       return JSON.stringify(MOCK_NIX_SEARCH_RESULTS) as T;
     }
     if (cmd === "nix_package_detail") {
