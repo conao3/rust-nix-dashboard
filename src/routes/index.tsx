@@ -5,12 +5,18 @@ import { revalidateLogic, useForm } from "@tanstack/react-form";
 import { ListBox, ListBoxItem } from "react-aria-components";
 import { invoke } from "../lib/tauri";
 import {
+  ActionButton,
   Button,
   Heading,
   TextField,
   Text,
   ProgressCircle,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanel,
 } from "@react-spectrum/s2";
+import Copy from "@react-spectrum/s2/icons/Copy";
 import * as z from "zod";
 import type { NixSearchResults, NixPackageDetail } from "../types/nix";
 
@@ -72,7 +78,7 @@ function PackageList(props: PackageListProps) {
           {(item) => (
             <ListBoxItem
               textValue={`${item.pname} ${item.version}`}
-              className="cursor-pointer rounded data-[selected=true]:bg-blue-100 data-[selected=true]:dark:bg-blue-900 data-[hovered=true]:bg-gray-100 data-[hovered=true]:dark:bg-gray-800"
+              className="cursor-pointer rounded rac-selected:bg-blue-100 rac-selected:dark:bg-blue-900 rac-hovered:bg-gray-100 rac-hovered:dark:bg-gray-800"
             >
               <div className="flex flex-col gap-1 p-3">
                 <div className="font-semibold">
@@ -108,6 +114,23 @@ function PackageDetail(props: PackageDetailProps) {
       return JSON.parse(resultJson) as NixPackageDetail;
     },
   });
+
+  const packageName = props.packageKey.split(".").pop() || props.pname;
+
+  const commands = {
+    profile: `nix profile install nixpkgs#${packageName}`,
+    nixos: `environment.systemPackages = [ pkgs.${packageName} ];`,
+    shell: `nix-shell -p ${packageName}`,
+    env: `nix-env -iA nixpkgs.${packageName}`,
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
 
   return (
     <div className="w-96 flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-auto">
@@ -292,6 +315,67 @@ function PackageDetail(props: PackageDetailProps) {
                   Not available
                 </Text>
               )}
+            </div>
+            <div>
+              <div className="text-sm font-semibold mb-2">Install Commands</div>
+              <Tabs defaultSelectedKey="profile" aria-label="Install methods">
+                <TabList>
+                  <Tab id="profile">nix profile</Tab>
+                  <Tab id="nixos">NixOS Config</Tab>
+                  <Tab id="shell">nix-shell</Tab>
+                  <Tab id="env">nix-env</Tab>
+                </TabList>
+                <TabPanel id="profile">
+                  <div className="flex items-center gap-2 pt-3">
+                    <code className="flex-1 rounded bg-gray-100 px-3 py-2 text-sm dark:bg-gray-800">
+                      {commands.profile}
+                    </code>
+                    <ActionButton
+                      onPress={() => copyToClipboard(commands.profile)}
+                    >
+                      <Copy />
+                      <Text>Copy</Text>
+                    </ActionButton>
+                  </div>
+                </TabPanel>
+                <TabPanel id="nixos">
+                  <div className="flex items-center gap-2 pt-3">
+                    <code className="flex-1 rounded bg-gray-100 px-3 py-2 text-sm dark:bg-gray-800">
+                      {commands.nixos}
+                    </code>
+                    <ActionButton
+                      onPress={() => copyToClipboard(commands.nixos)}
+                    >
+                      <Copy />
+                      <Text>Copy</Text>
+                    </ActionButton>
+                  </div>
+                </TabPanel>
+                <TabPanel id="shell">
+                  <div className="flex items-center gap-2 pt-3">
+                    <code className="flex-1 rounded bg-gray-100 px-3 py-2 text-sm dark:bg-gray-800">
+                      {commands.shell}
+                    </code>
+                    <ActionButton
+                      onPress={() => copyToClipboard(commands.shell)}
+                    >
+                      <Copy />
+                      <Text>Copy</Text>
+                    </ActionButton>
+                  </div>
+                </TabPanel>
+                <TabPanel id="env">
+                  <div className="flex items-center gap-2 pt-3">
+                    <code className="flex-1 rounded bg-gray-100 px-3 py-2 text-sm dark:bg-gray-800">
+                      {commands.env}
+                    </code>
+                    <ActionButton onPress={() => copyToClipboard(commands.env)}>
+                      <Copy />
+                      <Text>Copy</Text>
+                    </ActionButton>
+                  </div>
+                </TabPanel>
+              </Tabs>
             </div>
           </div>
         )}
