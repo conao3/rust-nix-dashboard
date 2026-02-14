@@ -12,4 +12,4 @@ build:
 
 .PHONY: clean
 clean:
-	rm -rf node_modules target src-tauri/target
+	rm -rf node_modules dist target src-tauri/target
