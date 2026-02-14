@@ -22,7 +22,6 @@
 
       perSystem =
         {
-          pkgs,
           lib,
           system,
           ...
