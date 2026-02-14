@@ -10,7 +10,8 @@ function About() {
       <h1 className="mb-5 text-4xl font-bold">About</h1>
       <p className="mb-3">Rust Nix Dashboard</p>
       <p className="text-sm opacity-80">
-        Built with Rust, Tauri, React, TypeScript, TanStack Router, and Tailwind CSS
+        Built with Rust, Tauri, React, TypeScript, TanStack Router, and Tailwind
+        CSS
       </p>
     </div>
   );

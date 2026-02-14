@@ -5,6 +5,7 @@ A desktop application built with Rust + Tauri + React + TypeScript + TanStack Ro
 ## Tech Stack
 
 ### Frontend
+
 - React 19
 - TypeScript 5.7
 - TanStack Router 1.91
@@ -12,10 +13,12 @@ A desktop application built with Rust + Tauri + React + TypeScript + TanStack Ro
 - Vite 6.0
 
 ### Backend
+
 - Rust
 - Tauri 2.1
 
 ### Development Environment
+
 - Nix Flakes
 - pnpm 10
 
