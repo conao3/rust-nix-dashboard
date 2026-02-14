@@ -374,6 +374,39 @@ const MOCK_PACKAGE_DETAILS: Record<
   },
 };
 
+const MOCK_DEPENDENCIES: Record<string, Record<string, unknown>> = {
+  "legacyPackages.x86_64-linux.hello": {
+    "/nix/store/c7xq1hry7mx5rxr1vqwf7dhphpd7hl29-hello-2.12.2.drv": {
+      name: "hello-2.12.2",
+      system: "x86_64-linux",
+      builder:
+        "/nix/store/f15k3dpilmiyv6zgpib289rnjykgr1r4-bash-5.3p9/bin/bash",
+      args: [],
+      env: {},
+      inputDrvs: {
+        "/nix/store/03r3ipfa69l8nla101khyw3g67j24357-bash-5.3p9.drv": {
+          dynamicOutputs: {},
+          outputs: ["out"],
+        },
+        "/nix/store/rbfgknm995x1rwpnmsn1d0c792r257hz-stdenv-linux.drv": {
+          dynamicOutputs: {},
+          outputs: ["out"],
+        },
+        "/nix/store/v8m32b0m95jpv6pza41nrw9wf8l0q2w9-version-check-hook.drv": {
+          dynamicOutputs: {},
+          outputs: ["out"],
+        },
+      },
+      inputSrcs: [],
+      outputs: {
+        out: {
+          path: "/nix/store/mi08jhbcjib1i1kgvbd0fxn2yrnzdv4a-hello-2.12.2",
+        },
+      },
+    },
+  },
+};
+
 export async function invoke<T>(
   cmd: string,
   args?: Record<string, unknown>,
@@ -391,6 +424,15 @@ export async function invoke<T>(
         throw new Error(`Package not found: ${packageKey}`);
       }
       return JSON.stringify(detail) as T;
+    }
+    if (cmd === "nix_package_dependencies") {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const packageKey = args?.packageKey as string;
+      const deps = MOCK_DEPENDENCIES[packageKey];
+      if (!deps) {
+        throw new Error(`Dependencies not found: ${packageKey}`);
+      }
+      return JSON.stringify(deps) as T;
     }
     throw new Error(
       "Tauri is not available. Please run 'make dev' instead of 'make dev-web' to use Tauri features.",

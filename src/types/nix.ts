@@ -44,3 +44,25 @@ export interface NixPackageDetail {
   unsupported?: boolean;
   maintainers?: NixPackageMaintainer[];
 }
+
+export interface NixDerivationOutput {
+  path: string;
+}
+
+export interface NixDerivationInputDrv {
+  dynamicOutputs: Record<string, unknown>;
+  outputs: string[];
+}
+
+export interface NixDerivation {
+  name: string;
+  system: string;
+  builder: string;
+  args: string[];
+  env: Record<string, string>;
+  inputDrvs: Record<string, NixDerivationInputDrv>;
+  inputSrcs: string[];
+  outputs: Record<string, NixDerivationOutput>;
+}
+
+export type NixDerivationShowResult = Record<string, NixDerivation>;

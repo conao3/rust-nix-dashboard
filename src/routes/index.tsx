@@ -17,12 +17,19 @@ import {
   TabPanel,
   TooltipTrigger,
   Tooltip,
+  TreeView,
+  TreeViewItem,
+  TreeViewItemContent,
 } from "@react-spectrum/s2";
 import Copy from "@react-spectrum/s2/icons/Copy";
 import Checkmark from "@react-spectrum/s2/icons/Checkmark";
 import { clsx } from "clsx";
 import * as z from "zod";
-import type { NixSearchResults, NixPackageDetail } from "../types/nix";
+import type {
+  NixSearchResults,
+  NixPackageDetail,
+  NixDerivationShowResult,
+} from "../types/nix";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -165,6 +172,16 @@ function PackageDetail(props: PackageDetailProps) {
     },
   });
 
+  const { data: dependencies, isFetching: isFetchingDeps } = useQuery({
+    queryKey: ["nix-package-dependencies", props.packageKey],
+    queryFn: async () => {
+      const resultJson = await invoke<string>("nix_package_dependencies", {
+        packageKey: props.packageKey,
+      });
+      return JSON.parse(resultJson) as NixDerivationShowResult;
+    },
+  });
+
   const packageName = props.packageKey.split(".").pop() || props.pname;
 
   const commands = {
@@ -172,6 +189,49 @@ function PackageDetail(props: PackageDetailProps) {
     nixos: `environment.systemPackages = [ pkgs.${packageName} ];`,
     shell: `nix-shell -p ${packageName}`,
     env: `nix-env -iA nixpkgs.${packageName}`,
+  };
+
+  const extractPackageName = (path: string) => {
+    const parts = path.split("/");
+    const lastPart = parts[parts.length - 1];
+    return lastPart.replace(/^[a-z0-9]+-/, "").replace(/\.drv$/, "");
+  };
+
+  const buildDependencyTree = (drvResult: NixDerivationShowResult) => {
+    if (!drvResult) return null;
+
+    const drvEntries = Object.entries(drvResult);
+    if (drvEntries.length === 0) return null;
+
+    const [mainDrvPath, mainDrv] = drvEntries[0];
+    const mainName = mainDrv.name;
+
+    const inputDrvs = Object.keys(mainDrv.inputDrvs);
+
+    return (
+      <TreeViewItem key={mainDrvPath} id={mainDrvPath} textValue={mainName}>
+        <TreeViewItemContent>
+          <div className="flex flex-col">
+            <span className="font-semibold">{mainName}</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">
+              {mainDrv.system}
+            </span>
+          </div>
+        </TreeViewItemContent>
+        {inputDrvs.map((drvPath, idx) => {
+          const name = extractPackageName(drvPath);
+          return (
+            <TreeViewItem
+              key={drvPath}
+              id={`${drvPath}-${idx}`}
+              textValue={name}
+            >
+              <TreeViewItemContent>{name}</TreeViewItemContent>
+            </TreeViewItem>
+          );
+        })}
+      </TreeViewItem>
+    );
   };
 
   return (
@@ -351,6 +411,33 @@ function PackageDetail(props: PackageDetailProps) {
                       {platform}
                     </span>
                   ))}
+                </div>
+              ) : (
+                <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
+                  Not available
+                </Text>
+              )}
+            </div>
+            <div>
+              <div className="text-sm font-semibold mb-1">
+                Build Dependencies
+              </div>
+              {isFetchingDeps ? (
+                <div className="flex items-center gap-2">
+                  <ProgressCircle
+                    aria-label="Loading dependencies"
+                    isIndeterminate
+                    size="S"
+                  />
+                  <Text UNSAFE_className="text-sm text-gray-600 dark:text-gray-400">
+                    Loading dependencies...
+                  </Text>
+                </div>
+              ) : dependencies && Object.keys(dependencies).length > 0 ? (
+                <div className="max-h-64 overflow-auto rounded border border-gray-200 p-2 dark:border-gray-700">
+                  <TreeView aria-label="Package dependencies">
+                    {buildDependencyTree(dependencies)}
+                  </TreeView>
                 </div>
               ) : (
                 <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
