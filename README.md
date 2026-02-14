@@ -68,11 +68,19 @@ make install
 
 ### Start Development Server
 
+**Desktop (Tauri):**
 ```bash
 make dev
 ```
 
-This will start the Vite development server (http://localhost:1420) and the Tauri application.
+This will start the Vite development server and the Tauri desktop application.
+
+**Browser:**
+```bash
+make dev-web
+```
+
+This will start only the Vite development server at http://localhost:1420. You can open it in your browser. Note that Tauri-specific features (like `nix search`) will not work in browser mode.
 
 ### Build
 

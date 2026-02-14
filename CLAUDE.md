@@ -18,7 +18,13 @@ When starting work on this project, read `README.md` first to understand:
 
 1. Enter the Nix development environment: `nix develop`
 2. Install dependencies: `make install`
-3. Start development server: `make dev`
+3. Start development server:
+   - Desktop (Tauri): `make dev` - Full functionality
+   - Browser: `make dev-web` - UI development only (Tauri features won't work)
+
+## Security Note
+
+This project uses `__TAURI_INTERNALS__` to detect Tauri environment instead of `withGlobalTauri` for better security. The `withGlobalTauri` option exposes the entire Tauri API globally, which is a security risk.
 
 ## UI Component Strategy
 

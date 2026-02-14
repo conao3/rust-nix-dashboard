@@ -6,6 +6,10 @@ install:
 dev:
 	pnpm tauri dev
 
+.PHONY: dev-web
+dev-web:
+	pnpm dev
+
 .PHONY: build
 build:
 	pnpm tauri build
