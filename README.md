@@ -12,6 +12,24 @@ A desktop application built with Rust + Tauri + React + TypeScript + TanStack Ro
 - Tailwind CSS 4.0
 - Vite 6.0
 
+### UI Libraries
+
+- **React Spectrum S2** - Adobe's design system with 100+ accessible components
+  - Primary component library for standard UI elements
+  - Built-in accessibility, internationalization, and Spectrum design tokens
+  - Learn more: https://react-spectrum.adobe.com/llms.txt
+
+- **React Aria Components** - Low-level component primitives
+  - Used when React Spectrum doesn't provide the needed component
+  - Highly customizable, accessible components with hooks API
+  - Works with React Stately for state management
+  - Learn more: https://react-aria.adobe.com/llms.txt
+
+- **React Stately** - State management hooks for complex components
+  - Complements React Aria Components
+  - Provides collection state, selection state, and other UI state logic
+  - Learn more: https://react-aria.adobe.com/useListState.html
+
 ### Backend
 
 - Rust
