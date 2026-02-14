@@ -51,10 +51,6 @@
             librsvg
           ];
 
-          linuxNativeBuildInputs = with pkgs; [
-            pkg-config
-          ];
-
           darwinBuildInputs = with pkgs; [
             darwin.apple_sdk.frameworks.WebKit
             darwin.apple_sdk.frameworks.AppKit
@@ -63,9 +59,7 @@
         in
         {
           devShells.default = pkgs.mkShell {
-            nativeBuildInputs = lib.optionals pkgs.stdenv.isLinux linuxNativeBuildInputs;
-
-            buildInputs =
+            packages =
               with pkgs;
               [
                 rustc
@@ -76,7 +70,9 @@
                 nodejs
                 pnpm
               ]
-              ++ (if pkgs.stdenv.isLinux then linuxBuildInputs else darwinBuildInputs);
+              ++ lib.optionals stdenv.isLinux [ pkg-config ];
+
+            buildInputs = if pkgs.stdenv.isLinux then linuxBuildInputs else darwinBuildInputs;
 
             env = lib.optionalAttrs pkgs.stdenv.isLinux {
               GIO_MODULE_PATH = "${pkgs.glib-networking}/lib/gio/modules";
