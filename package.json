@@ -14,7 +14,10 @@
     "@tanstack/react-router": "^1.159.10",
     "@tauri-apps/api": "^2.10.1",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-aria-components": "^1.15.1",
+    "react-dom": "^19.2.4",
+    "react-stately": "^3.44.0",
+    "tailwindcss-react-aria-components": "^2.0.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
@@ -26,6 +29,7 @@
     "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitejs/plugin-react": "^4.7.0",
     "tailwindcss": "^4.1.18",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.3",
     "vite": "^6.4.1"
   }

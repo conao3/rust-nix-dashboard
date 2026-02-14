@@ -23,9 +23,18 @@ importers:
       react:
         specifier: ^19.2.4
         version: 19.2.4
+      react-aria-components:
+        specifier: ^1.15.1
+        version: 1.15.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-dom:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
+      react-stately:
+        specifier: ^3.44.0
+        version: 3.44.0(react@19.2.4)
+      tailwindcss-react-aria-components:
+        specifier: ^2.0.1
+        version: 2.0.1(tailwindcss@4.1.18)
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.1.18
@@ -54,6 +63,9 @@ importers:
       tailwindcss:
         specifier: ^4.1.18
         version: 4.1.18
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@4.1.18)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1915,6 +1927,16 @@ packages:
   source-map@0.7.6:
     resolution: {integrity: sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==}
     engines: {node: '>= 12'}
+
+  tailwindcss-animate@1.0.7:
+    resolution: {integrity: sha512-bl6mpH3T7I3UFxuvDEXLxy/VuFxBk5bbzplh7tXI68mwMokNYd1t9qPBHlnyTwfa4JGC4zP516I1hYYtQ/vspA==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || insiders'
+
+  tailwindcss-react-aria-components@2.0.1:
+    resolution: {integrity: sha512-yTAfYv9BE/gKczS+b8UiFMqxnrEYKKNE6Y4vAWzGadkHGb4Yuawp0SHbZKkZJQgFvK0KjO3JpCq/0kzR5jJ9tw==}
+    peerDependencies:
+      tailwindcss: ^4.0.0
 
   tailwindcss@4.1.18:
     resolution: {integrity: sha512-4+Z+0yiYyEtUVCScyfHCxOYP06L5Ne+JiHhY2IjR2KWMIWhJOYZKLSGZaP5HkZ8+bY0cxfzwDE5uOmzFXyIwxw==}
@@ -4271,6 +4293,14 @@ snapshots:
   source-map@0.6.1: {}
 
   source-map@0.7.6: {}
+
+  tailwindcss-animate@1.0.7(tailwindcss@4.1.18):
+    dependencies:
+      tailwindcss: 4.1.18
+
+  tailwindcss-react-aria-components@2.0.1(tailwindcss@4.1.18):
+    dependencies:
+      tailwindcss: 4.1.18
 
   tailwindcss@4.1.18: {}
 
