@@ -12,7 +12,7 @@ import {
   ProgressCircle,
 } from "@react-spectrum/s2";
 import * as z from "zod";
-import type { NixSearchResults } from "../types/nix";
+import type { NixSearchResults, NixPackageDetail } from "../types/nix";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -70,7 +70,10 @@ function PackageList(props: PackageListProps) {
           className="flex-1 min-h-0 overflow-auto"
         >
           {(item) => (
-            <ListBoxItem textValue={`${item.pname} ${item.version}`}>
+            <ListBoxItem
+              textValue={`${item.pname} ${item.version}`}
+              className="cursor-pointer rounded data-[selected=true]:bg-blue-100 data-[selected=true]:dark:bg-blue-900 data-[hovered=true]:bg-gray-100 data-[hovered=true]:dark:bg-gray-800"
+            >
               <div className="flex flex-col gap-1 p-3">
                 <div className="font-semibold">
                   {item.pname} {item.version}
@@ -88,21 +91,24 @@ function PackageList(props: PackageListProps) {
 }
 
 type PackageDetailProps = {
-  item: {
-    id: string;
-    key: string;
-    pname: string;
-    version: string;
-    description?: string;
-    longDescription?: string;
-    homepage?: string;
-    license?: string;
-    platforms?: string[];
-  };
+  packageKey: string;
+  pname: string;
+  version: string;
+  description?: string;
   onClose: () => void;
 };
 
 function PackageDetail(props: PackageDetailProps) {
+  const { data: detail, isFetching } = useQuery({
+    queryKey: ["nix-package-detail", props.packageKey],
+    queryFn: async () => {
+      const resultJson = await invoke<string>("nix_package_detail", {
+        packageKey: props.packageKey,
+      });
+      return JSON.parse(resultJson) as NixPackageDetail;
+    },
+  });
+
   return (
     <div className="w-96 flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-auto">
       <div className="mb-4 flex items-center justify-between">
@@ -118,55 +124,174 @@ function PackageDetail(props: PackageDetailProps) {
       <div className="flex flex-col gap-4">
         <div>
           <div className="text-lg font-semibold">
-            {props.item.pname} {props.item.version}
+            {props.pname} {props.version}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-            {props.item.key}
+            {props.packageKey}
           </div>
         </div>
-        {props.item.description && (
-          <div>
-            <div className="text-sm font-semibold mb-1">Description</div>
-            <Text>{props.item.description}</Text>
+        {isFetching && (
+          <div className="flex items-center gap-3">
+            <ProgressCircle
+              aria-label="Loading details"
+              isIndeterminate
+              size="S"
+            />
+            <Text UNSAFE_className="text-sm text-gray-600 dark:text-gray-400">
+              Loading additional details...
+            </Text>
           </div>
         )}
-        {props.item.longDescription && (
-          <div>
-            <div className="text-sm font-semibold mb-1">Long Description</div>
-            <Text>{props.item.longDescription}</Text>
-          </div>
-        )}
-        {props.item.homepage && (
-          <div>
-            <div className="text-sm font-semibold mb-1">Homepage</div>
-            <a
-              href={props.item.homepage}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              {props.item.homepage}
-            </a>
-          </div>
-        )}
-        {props.item.license && (
-          <div>
-            <div className="text-sm font-semibold mb-1">License</div>
-            <Text>{props.item.license}</Text>
-          </div>
-        )}
-        {props.item.platforms && props.item.platforms.length > 0 && (
-          <div>
-            <div className="text-sm font-semibold mb-1">Platforms</div>
-            <div className="flex flex-wrap gap-2">
-              {props.item.platforms.map((platform) => (
-                <span
-                  key={platform}
-                  className="rounded bg-gray-200 px-2 py-1 text-xs dark:bg-gray-700"
+        {!isFetching && (
+          <div className="flex flex-col gap-4">
+            {detail &&
+              (detail.broken ||
+                detail.insecure ||
+                detail.unfree ||
+                detail.unsupported) && (
+                <div className="flex flex-wrap gap-2">
+                  {detail.broken && (
+                    <span className="rounded bg-red-200 px-2 py-1 text-xs font-semibold text-red-900 dark:bg-red-900 dark:text-red-100">
+                      Broken
+                    </span>
+                  )}
+                  {detail.insecure && (
+                    <span className="rounded bg-orange-200 px-2 py-1 text-xs font-semibold text-orange-900 dark:bg-orange-900 dark:text-orange-100">
+                      Insecure
+                    </span>
+                  )}
+                  {detail.unfree && (
+                    <span className="rounded bg-yellow-200 px-2 py-1 text-xs font-semibold text-yellow-900 dark:bg-yellow-900 dark:text-yellow-100">
+                      Unfree
+                    </span>
+                  )}
+                  {detail.unsupported && (
+                    <span className="rounded bg-gray-300 px-2 py-1 text-xs font-semibold text-gray-900 dark:bg-gray-700 dark:text-gray-100">
+                      Unsupported
+                    </span>
+                  )}
+                </div>
+              )}
+            <div>
+              <div className="text-sm font-semibold mb-1">Description</div>
+              {detail?.description || props.description ? (
+                <Text>{detail?.description || props.description}</Text>
+              ) : (
+                <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
+                  Not available
+                </Text>
+              )}
+            </div>
+            <div>
+              <div className="text-sm font-semibold mb-1">Long Description</div>
+              {detail?.longDescription ? (
+                <Text>{detail.longDescription}</Text>
+              ) : (
+                <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
+                  Not available
+                </Text>
+              )}
+            </div>
+            <div>
+              <div className="text-sm font-semibold mb-1">Main Program</div>
+              {detail?.mainProgram ? (
+                <code className="rounded bg-gray-100 px-2 py-1 text-sm dark:bg-gray-800">
+                  {detail.mainProgram}
+                </code>
+              ) : (
+                <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
+                  Not available
+                </Text>
+              )}
+            </div>
+            <div>
+              <div className="text-sm font-semibold mb-1">Homepage</div>
+              {detail?.homepage ? (
+                <a
+                  href={detail.homepage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 dark:text-blue-400 hover:underline"
                 >
-                  {platform}
-                </span>
-              ))}
+                  {detail.homepage}
+                </a>
+              ) : (
+                <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
+                  Not available
+                </Text>
+              )}
+            </div>
+            <div>
+              <div className="text-sm font-semibold mb-1">Changelog</div>
+              {detail?.changelog ? (
+                <a
+                  href={detail.changelog}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  {detail.changelog}
+                </a>
+              ) : (
+                <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
+                  Not available
+                </Text>
+              )}
+            </div>
+            <div>
+              <div className="text-sm font-semibold mb-1">License</div>
+              {detail?.license ? (
+                <div className="flex flex-col gap-1">
+                  {detail.license.fullName ? (
+                    <Text>{detail.license.fullName}</Text>
+                  ) : (
+                    <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
+                      Not available
+                    </Text>
+                  )}
+                  {detail.license.spdxId && (
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      SPDX: {detail.license.spdxId}
+                    </div>
+                  )}
+                  {detail.license.free !== undefined && (
+                    <div className="flex items-center gap-2 text-sm">
+                      {detail.license.free ? (
+                        <span className="rounded bg-green-200 px-2 py-1 text-xs dark:bg-green-700">
+                          Free Software
+                        </span>
+                      ) : (
+                        <span className="rounded bg-orange-200 px-2 py-1 text-xs dark:bg-orange-700">
+                          Non-Free
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
+                  Not available
+                </Text>
+              )}
+            </div>
+            <div>
+              <div className="text-sm font-semibold mb-1">Platforms</div>
+              {detail?.platforms && detail.platforms.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {detail.platforms.map((platform) => (
+                    <span
+                      key={platform}
+                      className="rounded bg-gray-200 px-2 py-1 text-xs dark:bg-gray-700"
+                    >
+                      {platform}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
+                  Not available
+                </Text>
+              )}
             </div>
           </div>
         )}
@@ -324,7 +449,10 @@ function Index() {
           />
           {selectedItem && (
             <PackageDetail
-              item={selectedItem}
+              packageKey={selectedItem.key}
+              pname={selectedItem.pname}
+              version={selectedItem.version}
+              description={selectedItem.description}
               onClose={() => setSelectedKey(undefined)}
             />
           )}
