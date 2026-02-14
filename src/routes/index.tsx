@@ -33,6 +33,148 @@ type SearchFormProps = {
   isFetching: boolean;
 };
 
+type PackageListProps = {
+  items: Array<{
+    id: string;
+    key: string;
+    pname: string;
+    version: string;
+    description?: string;
+  }>;
+  selectedKey: string | undefined;
+  onSelectionChange: (key: string | undefined) => void;
+};
+
+function PackageList(props: PackageListProps) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="mb-4 flex-none">
+        <Heading level={2}>Results ({props.items.length})</Heading>
+      </div>
+      {props.items.length === 0 ? (
+        <div className="rounded border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
+          <Text>No packages found. Try a different search term.</Text>
+        </div>
+      ) : (
+        <ListBox
+          aria-label="Search results"
+          items={props.items}
+          selectionMode="single"
+          selectedKeys={props.selectedKey ? [props.selectedKey] : []}
+          onSelectionChange={(keys) => {
+            const key = Array.from(keys)[0];
+            if (key) {
+              props.onSelectionChange(String(key));
+            }
+          }}
+          className="flex-1 min-h-0 overflow-auto"
+        >
+          {(item) => (
+            <ListBoxItem textValue={`${item.pname} ${item.version}`}>
+              <div className="flex flex-col gap-1 p-3">
+                <div className="font-semibold">
+                  {item.pname} {item.version}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {item.description || item.key}
+                </div>
+              </div>
+            </ListBoxItem>
+          )}
+        </ListBox>
+      )}
+    </div>
+  );
+}
+
+type PackageDetailProps = {
+  item: {
+    id: string;
+    key: string;
+    pname: string;
+    version: string;
+    description?: string;
+    longDescription?: string;
+    homepage?: string;
+    license?: string;
+    platforms?: string[];
+  };
+  onClose: () => void;
+};
+
+function PackageDetail(props: PackageDetailProps) {
+  return (
+    <div className="w-96 flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-auto">
+      <div className="mb-4 flex items-center justify-between">
+        <Heading level={2}>Details</Heading>
+        <Button
+          variant="secondary"
+          onPress={props.onClose}
+          aria-label="Close details"
+        >
+          ✕
+        </Button>
+      </div>
+      <div className="flex flex-col gap-4">
+        <div>
+          <div className="text-lg font-semibold">
+            {props.item.pname} {props.item.version}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+            {props.item.key}
+          </div>
+        </div>
+        {props.item.description && (
+          <div>
+            <div className="text-sm font-semibold mb-1">Description</div>
+            <Text>{props.item.description}</Text>
+          </div>
+        )}
+        {props.item.longDescription && (
+          <div>
+            <div className="text-sm font-semibold mb-1">Long Description</div>
+            <Text>{props.item.longDescription}</Text>
+          </div>
+        )}
+        {props.item.homepage && (
+          <div>
+            <div className="text-sm font-semibold mb-1">Homepage</div>
+            <a
+              href={props.item.homepage}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              {props.item.homepage}
+            </a>
+          </div>
+        )}
+        {props.item.license && (
+          <div>
+            <div className="text-sm font-semibold mb-1">License</div>
+            <Text>{props.item.license}</Text>
+          </div>
+        )}
+        {props.item.platforms && props.item.platforms.length > 0 && (
+          <div>
+            <div className="text-sm font-semibold mb-1">Platforms</div>
+            <div className="flex flex-wrap gap-2">
+              {props.item.platforms.map((platform) => (
+                <span
+                  key={platform}
+                  className="rounded bg-gray-200 px-2 py-1 text-xs dark:bg-gray-700"
+                >
+                  {platform}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SearchForm(props: SearchFormProps) {
   const form = useForm({
     defaultValues: searchFormDefaultValue,
@@ -100,6 +242,7 @@ function SearchForm(props: SearchFormProps) {
 
 function Index() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedKey, setSelectedKey] = useState<string | undefined>();
 
   const {
     data: results,
@@ -126,6 +269,11 @@ function Index() {
           }))
         : [],
     [results],
+  );
+
+  const selectedItem = useMemo(
+    () => items.find((item) => item.id === selectedKey) || null,
+    [items, selectedKey],
   );
 
   return (
@@ -168,33 +316,17 @@ function Index() {
       )}
 
       {results && !isFetching && (
-        <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <div className="mb-4 flex-none">
-            <Heading level={2}>Results ({items.length})</Heading>
-          </div>
-          {items.length === 0 ? (
-            <div className="rounded border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
-              <Text>No packages found. Try a different search term.</Text>
-            </div>
-          ) : (
-            <ListBox
-              aria-label="Search results"
-              items={items}
-              className="flex-1 min-h-0 overflow-auto"
-            >
-              {(item) => (
-                <ListBoxItem textValue={`${item.pname} ${item.version}`}>
-                  <div className="flex flex-col gap-1 p-3">
-                    <div className="font-semibold">
-                      {item.pname} {item.version}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {item.description || item.key}
-                    </div>
-                  </div>
-                </ListBoxItem>
-              )}
-            </ListBox>
+        <div className="flex min-h-0 flex-1 gap-6">
+          <PackageList
+            items={items}
+            selectedKey={selectedKey}
+            onSelectionChange={setSelectedKey}
+          />
+          {selectedItem && (
+            <PackageDetail
+              item={selectedItem}
+              onClose={() => setSelectedKey(undefined)}
+            />
           )}
         </div>
       )}
