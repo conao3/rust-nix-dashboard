@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useForm } from "@tanstack/react-form";
 import { ListBox, ListBoxItem } from "react-aria-components";
 import { invoke } from "../lib/tauri";
 import {
@@ -17,8 +18,17 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const [query, setQuery] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const form = useForm({
+    defaultValues: {
+      query: "",
+    },
+    onSubmit: async ({ value }) => {
+      if (!value.query.trim()) return;
+      setSearchQuery(value.query);
+    },
+  });
 
   const {
     data: results,
@@ -47,32 +57,36 @@ function Index() {
     [results],
   );
 
-  function search() {
-    if (!query.trim()) return;
-    setSearchQuery(query);
-  }
-
   return (
     <div className="flex min-h-0 w-full max-w-4xl flex-1 flex-col gap-6">
       <div className="flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div className="mb-4">
           <Heading level={1}>Nix Package Search</Heading>
         </div>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <TextField
-              aria-label="Search packages"
-              placeholder="Search nixpkgs..."
-              value={query}
-              onChange={setQuery}
-              onKeyDown={(e) => e.key === "Enter" && !isFetching && search()}
-              isDisabled={isFetching}
-            />
-          </div>
-          <Button onPress={search} variant="accent" isPending={isFetching}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+          className="flex gap-2"
+        >
+          <form.Field name="query">
+            {(field) => (
+              <div className="flex-1">
+                <TextField
+                  aria-label="Search packages"
+                  placeholder="Search nixpkgs..."
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  isDisabled={isFetching}
+                />
+              </div>
+            )}
+          </form.Field>
+          <Button type="submit" variant="accent" isPending={isFetching}>
             Search
           </Button>
-        </div>
+        </form>
 
         {isFetching && (
           <div className="mt-4 flex items-center gap-3 rounded border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
