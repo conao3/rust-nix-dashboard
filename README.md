@@ -69,6 +69,7 @@ make install
 ### Start Development Server
 
 **Desktop (Tauri):**
+
 ```bash
 make dev
 ```
@@ -76,6 +77,7 @@ make dev
 This will start the Vite development server and the Tauri desktop application.
 
 **Browser:**
+
 ```bash
 make dev-web
 ```

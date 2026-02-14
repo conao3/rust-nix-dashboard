@@ -13,8 +13,8 @@ fn nix_search_sync(query: &str) -> Result<String, String> {
         return Err(format!("nix search failed: {}", stderr));
     }
 
-    let stdout = String::from_utf8(output.stdout)
-        .map_err(|e| format!("Failed to parse output: {}", e))?;
+    let stdout =
+        String::from_utf8(output.stdout).map_err(|e| format!("Failed to parse output: {}", e))?;
 
     Ok(stdout)
 }
