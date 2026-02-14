@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 import {
   Button,
@@ -16,13 +17,26 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<NixSearchResults | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [elapsedTime, setElapsedTime] = useState(0);
 
+  const {
+    data: results,
+    error,
+    isFetching,
+  } = useQuery({
+    queryKey: ["nix-search", searchQuery],
+    queryFn: async () => {
+      const resultJson = await invoke<string>("nix_search", {
+        query: searchQuery,
+      });
+      return JSON.parse(resultJson) as NixSearchResults;
+    },
+    enabled: !!searchQuery && searchQuery.trim().length > 0,
+  });
+
   useEffect(() => {
-    if (!loading) {
+    if (!isFetching) {
       setElapsedTime(0);
       return;
     }
@@ -33,25 +47,11 @@ function Index() {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [loading]);
+  }, [isFetching]);
 
-  async function search() {
+  function search() {
     if (!query.trim()) return;
-
-    setLoading(true);
-    setError(null);
-    setResults(null);
-
-    try {
-      const resultJson = await invoke<string>("nix_search", { query });
-      const parsed = JSON.parse(resultJson) as NixSearchResults;
-      setResults(parsed);
-    } catch (err) {
-      setError(String(err));
-      setResults(null);
-    } finally {
-      setLoading(false);
-    }
+    setSearchQuery(query);
   }
 
   return (
@@ -67,16 +67,16 @@ function Index() {
               placeholder="Search nixpkgs..."
               value={query}
               onChange={setQuery}
-              onKeyDown={(e) => e.key === "Enter" && !loading && search()}
-              isDisabled={loading}
+              onKeyDown={(e) => e.key === "Enter" && !isFetching && search()}
+              isDisabled={isFetching}
             />
           </div>
-          <Button onPress={search} variant="accent" isDisabled={loading}>
+          <Button onPress={search} variant="accent" isDisabled={isFetching}>
             Search
           </Button>
         </div>
 
-        {loading && (
+        {isFetching && (
           <div className="mt-4 flex items-center gap-3 rounded border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
             <ProgressCircle aria-label="Searching" isIndeterminate size="S" />
             <div className="flex flex-col gap-1">
@@ -88,11 +88,11 @@ function Index() {
 
         {error && (
           <div className="mt-4 rounded border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
-            <Text>{error}</Text>
+            <Text>{String(error)}</Text>
           </div>
         )}
 
-        {!loading && !results && !error && (
+        {!isFetching && !results && !error && (
           <div className="mt-4 rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
             <div className="mb-2 font-semibold">Search Tips:</div>
             <div className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-400">
@@ -106,7 +106,7 @@ function Index() {
         )}
       </div>
 
-      {results && !loading && (
+      {results && !isFetching && (
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="mb-4 flex items-center justify-between">
             <Heading level={2}>Results ({Object.keys(results).length})</Heading>

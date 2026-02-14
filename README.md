@@ -14,6 +14,7 @@ A GUI frontend for Nix package manager, built with Rust + Tauri + React + TypeSc
 - React 19
 - TypeScript 5.7
 - TanStack Router 1.91
+- TanStack Query 5.62
 - Tailwind CSS 4.0
 - Vite 6.0
 
