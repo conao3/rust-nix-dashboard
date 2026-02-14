@@ -28,7 +28,7 @@ function Providers(props: ProvidersProps) {
     <Provider
       background="base"
       router={{
-        navigate: (href, opts) => {
+        navigate: (href: ToOptions, opts) => {
           if (typeof href === "string") return;
           return router.navigate({ ...href, ...opts });
         },
