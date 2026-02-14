@@ -1,6 +1,11 @@
 # Rust Nix Dashboard
 
-A desktop application built with Rust + Tauri + React + TypeScript + TanStack Router + Tailwind CSS + Nix.
+A GUI frontend for Nix package manager, built with Rust + Tauri + React + TypeScript + TanStack Router + Tailwind CSS + Nix.
+
+## Features
+
+- **Package Search**: Search nixpkgs repository with `nix search`
+- More features coming soon...
 
 ## Tech Stack
 

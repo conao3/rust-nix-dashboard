@@ -1,5 +1,9 @@
 # Claude Instructions for rust-nix-dashboard
 
+## Project Overview
+
+This is a GUI frontend for the Nix package manager. The goal is to provide an intuitive interface for common Nix operations like package search, installation, and system management.
+
 ## Getting Started
 
 When starting work on this project, read `README.md` first to understand:
@@ -8,6 +12,7 @@ When starting work on this project, read `README.md` first to understand:
 - Available commands and development workflow
 - Project structure
 - UI library strategy (React Spectrum → React Aria Components → custom)
+- Current features and roadmap
 
 ## Development Workflow
 
