@@ -3,3 +3,4 @@
 /target
 /src-tauri/target
 /flake.lock
+/src/routeTree.gen.ts
