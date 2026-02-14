@@ -47,19 +47,19 @@ export const Route = createRootRoute({
   component: () => {
     return (
       <Providers>
-        <div className="flex min-h-screen flex-col bg-gradient-to-br from-indigo-500 to-purple-600">
-          <nav className="border-b border-white/20 bg-white/10 backdrop-blur-md">
+        <div className="flex min-h-screen flex-col">
+          <nav className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
             <div className="mx-auto max-w-7xl px-4 py-4">
-              <div className="flex gap-4">
+              <div className="flex gap-2">
                 <Link
                   to="/"
-                  className="rounded-md px-4 py-2 text-white transition-colors hover:bg-white/10 [&.active]:bg-white/20"
+                  className="rounded-md px-4 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 [&.active]:bg-gray-200 dark:[&.active]:bg-gray-700"
                 >
                   Home
                 </Link>
                 <Link
                   to="/about"
-                  className="rounded-md px-4 py-2 text-white transition-colors hover:bg-white/10 [&.active]:bg-white/20"
+                  className="rounded-md px-4 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 [&.active]:bg-gray-200 dark:[&.active]:bg-gray-700"
                 >
                   About
                 </Link>

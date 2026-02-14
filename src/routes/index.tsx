@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Button, Heading, Text, TextField } from "@react-spectrum/s2";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -16,26 +17,32 @@ function Index() {
   }
 
   return (
-    <div className="rounded-2xl bg-white/10 p-10 text-center text-white backdrop-blur-md">
-      <h1 className="mb-5 text-4xl font-bold">Welcome to Tauri!</h1>
-      <p className="mb-5">Rust + Nix Dashboard</p>
-      <div className="flex gap-3">
-        <input
-          type="text"
-          placeholder="Enter your name..."
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && greet()}
-          className="rounded-md border-0 px-5 py-2.5 text-base text-gray-900"
-        />
-        <button
-          onClick={greet}
-          className="rounded-md border-0 bg-indigo-500 px-8 py-2.5 text-base text-white transition-colors hover:bg-indigo-600"
-        >
-          Greet
-        </button>
+    <div className="flex w-full max-w-md flex-col gap-4 rounded-lg border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="text-center">
+        <Heading level={1}>Welcome to Tauri!</Heading>
       </div>
-      {greeting && <div className="mt-5 min-h-[30px] text-xl">{greeting}</div>}
+      <div className="text-center">
+        <Text>Rust + Nix Dashboard</Text>
+      </div>
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <TextField
+            aria-label="Name"
+            placeholder="Enter your name..."
+            value={name}
+            onChange={setName}
+            onKeyDown={(e) => e.key === "Enter" && greet()}
+          />
+        </div>
+        <Button onPress={greet} variant="accent">
+          Greet
+        </Button>
+      </div>
+      {greeting && (
+        <div className="text-center">
+          <Text>{greeting}</Text>
+        </div>
+      )}
     </div>
   );
 }
