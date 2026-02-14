@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
-function App() {
+export default function App() {
   const [name, setName] = useState("");
   const [greeting, setGreeting] = useState("");
 
@@ -36,5 +36,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
