@@ -85,6 +85,7 @@
               rustfmt.enable = true;
               prettier.enable = true;
             };
+            settings.global.excludes = [ "pnpm-lock.yaml" ];
           };
         };
     };
