@@ -31,7 +31,7 @@
           overlay =
             final: prev:
             let
-              nodejs = prev.nodejs_22;
+              nodejs = prev.nodejs_24;
               pnpm = prev.pnpm_10.override { inherit nodejs; };
             in
             {
