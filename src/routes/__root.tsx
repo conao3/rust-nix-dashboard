@@ -47,7 +47,7 @@ export const Route = createRootRoute({
   component: () => {
     return (
       <Providers>
-        <div className="flex min-h-screen flex-col">
+        <div className="flex h-screen flex-col">
           <nav className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
             <div className="mx-auto max-w-7xl px-4 py-4">
               <div className="flex gap-2">
@@ -66,7 +66,7 @@ export const Route = createRootRoute({
               </div>
             </div>
           </nav>
-          <main className="flex flex-1 justify-center p-5">
+          <main className="flex min-h-0 flex-1 items-stretch justify-center p-5">
             <Outlet />
           </main>
           <TanStackRouterDevtools />

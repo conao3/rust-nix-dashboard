@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ListBox, ListBoxItem } from "react-aria-components";
 import { invoke } from "../lib/tauri";
 import {
   Button,
@@ -34,14 +35,26 @@ function Index() {
     enabled: !!searchQuery && searchQuery.trim().length > 0,
   });
 
+  const items = useMemo(
+    () =>
+      results
+        ? Object.entries(results).map(([key, pkg]) => ({
+            id: key,
+            key,
+            ...pkg,
+          }))
+        : [],
+    [results],
+  );
+
   function search() {
     if (!query.trim()) return;
     setSearchQuery(query);
   }
 
   return (
-    <div className="flex w-full max-w-4xl flex-col gap-6">
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+    <div className="flex min-h-0 w-full max-w-4xl flex-1 flex-col gap-6">
+      <div className="flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div className="mb-4">
           <Heading level={1}>Nix Package Search</Heading>
         </div>
@@ -92,35 +105,33 @@ function Index() {
       </div>
 
       {results && !isFetching && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <div className="mb-4 flex items-center justify-between">
-            <Heading level={2}>Results ({Object.keys(results).length})</Heading>
+        <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="mb-4 flex-none">
+            <Heading level={2}>Results ({items.length})</Heading>
           </div>
-          {Object.keys(results).length === 0 ? (
+          {items.length === 0 ? (
             <div className="rounded border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
               <Text>No packages found. Try a different search term.</Text>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
-              {Object.entries(results).map(([key, pkg]) => (
-                <div
-                  key={key}
-                  className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
-                >
-                  <div className="mb-1 font-mono text-sm text-gray-600 dark:text-gray-400">
-                    {key}
-                  </div>
-                  <div className="mb-1 font-semibold">
-                    {pkg.pname} {pkg.version}
-                  </div>
-                  {pkg.description && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {pkg.description}
+            <ListBox
+              aria-label="Search results"
+              items={items}
+              className="flex-1 min-h-0 overflow-auto"
+            >
+              {(item) => (
+                <ListBoxItem textValue={`${item.pname} ${item.version}`}>
+                  <div className="flex flex-col gap-1 p-3">
+                    <div className="font-semibold">
+                      {item.pname} {item.version}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {item.description || item.key}
+                    </div>
+                  </div>
+                </ListBoxItem>
+              )}
+            </ListBox>
           )}
         </div>
       )}
