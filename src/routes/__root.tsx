@@ -6,7 +6,7 @@ import {
   type NavigateOptions,
   type ToOptions,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Provider } from "@react-spectrum/s2";
 import { ReactNode } from "react";
 import "@react-spectrum/s2/page.css";
