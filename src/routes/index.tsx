@@ -15,8 +15,12 @@ import {
   TabList,
   Tab,
   TabPanel,
+  TooltipTrigger,
+  Tooltip,
 } from "@react-spectrum/s2";
 import Copy from "@react-spectrum/s2/icons/Copy";
+import Checkmark from "@react-spectrum/s2/icons/Checkmark";
+import { clsx } from "clsx";
 import * as z from "zod";
 import type { NixSearchResults, NixPackageDetail } from "../types/nix";
 
@@ -104,6 +108,52 @@ type PackageDetailProps = {
   onClose: () => void;
 };
 
+type CopyButtonProps = {
+  command: string;
+};
+
+function CopyButton(props: CopyButtonProps) {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(props.command);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <TooltipTrigger>
+      <ActionButton aria-label="Copy" onPress={copyToClipboard}>
+        <div className="relative inline-flex h-5 w-5 items-center justify-center">
+          <div
+            className={clsx("absolute transition-all duration-200", {
+              "scale-0 opacity-0": copied,
+              "scale-100 opacity-100": !copied,
+            })}
+          >
+            <Copy />
+          </div>
+          <div
+            className={clsx("absolute transition-all duration-200", {
+              "scale-100 opacity-100": copied,
+              "scale-0 opacity-0": !copied,
+            })}
+          >
+            <Checkmark />
+          </div>
+        </div>
+      </ActionButton>
+      <Tooltip>Copy</Tooltip>
+    </TooltipTrigger>
+  );
+}
+
 function PackageDetail(props: PackageDetailProps) {
   const { data: detail, isFetching } = useQuery({
     queryKey: ["nix-package-detail", props.packageKey],
@@ -122,14 +172,6 @@ function PackageDetail(props: PackageDetailProps) {
     nixos: `environment.systemPackages = [ pkgs.${packageName} ];`,
     shell: `nix-shell -p ${packageName}`,
     env: `nix-env -iA nixpkgs.${packageName}`,
-  };
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
   };
 
   return (
@@ -330,12 +372,7 @@ function PackageDetail(props: PackageDetailProps) {
                     <code className="flex-1 rounded bg-gray-100 px-3 py-2 text-sm dark:bg-gray-800">
                       {commands.profile}
                     </code>
-                    <ActionButton
-                      onPress={() => copyToClipboard(commands.profile)}
-                    >
-                      <Copy />
-                      <Text>Copy</Text>
-                    </ActionButton>
+                    <CopyButton command={commands.profile} />
                   </div>
                 </TabPanel>
                 <TabPanel id="nixos">
@@ -343,12 +380,7 @@ function PackageDetail(props: PackageDetailProps) {
                     <code className="flex-1 rounded bg-gray-100 px-3 py-2 text-sm dark:bg-gray-800">
                       {commands.nixos}
                     </code>
-                    <ActionButton
-                      onPress={() => copyToClipboard(commands.nixos)}
-                    >
-                      <Copy />
-                      <Text>Copy</Text>
-                    </ActionButton>
+                    <CopyButton command={commands.nixos} />
                   </div>
                 </TabPanel>
                 <TabPanel id="shell">
@@ -356,12 +388,7 @@ function PackageDetail(props: PackageDetailProps) {
                     <code className="flex-1 rounded bg-gray-100 px-3 py-2 text-sm dark:bg-gray-800">
                       {commands.shell}
                     </code>
-                    <ActionButton
-                      onPress={() => copyToClipboard(commands.shell)}
-                    >
-                      <Copy />
-                      <Text>Copy</Text>
-                    </ActionButton>
+                    <CopyButton command={commands.shell} />
                   </div>
                 </TabPanel>
                 <TabPanel id="env">
@@ -369,10 +396,7 @@ function PackageDetail(props: PackageDetailProps) {
                     <code className="flex-1 rounded bg-gray-100 px-3 py-2 text-sm dark:bg-gray-800">
                       {commands.env}
                     </code>
-                    <ActionButton onPress={() => copyToClipboard(commands.env)}>
-                      <Copy />
-                      <Text>Copy</Text>
-                    </ActionButton>
+                    <CopyButton command={commands.env} />
                   </div>
                 </TabPanel>
               </Tabs>
