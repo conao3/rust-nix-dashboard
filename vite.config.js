@@ -1,13 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import optimizeLocales from "@react-aria/optimize-locales-plugin";
+import { devtools } from "@tanstack/devtools-vite";
 
 export default defineConfig(({ mode }) => ({
   plugins: [
-    TanStackRouterVite(),
-    react(),
+    devtools(),
+    react({
+      babel: {
+        plugins: ["babel-plugin-react-compiler"],
+      },
+    }),
     tailwindcss(),
     {
       ...optimizeLocales.vite({

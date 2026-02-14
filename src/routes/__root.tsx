@@ -6,7 +6,6 @@ import {
   type NavigateOptions,
   type ToOptions,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Provider } from "@react-spectrum/s2";
 import { ReactNode } from "react";
 import "@react-spectrum/s2/page.css";
@@ -69,7 +68,6 @@ export const Route = createRootRoute({
           <main className="flex min-h-0 flex-1 items-stretch justify-center p-5">
             <Outlet />
           </main>
-          <TanStackRouterDevtools />
         </div>
       </Providers>
     );

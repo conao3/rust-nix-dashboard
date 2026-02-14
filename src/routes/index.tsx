@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useForm } from "@tanstack/react-form";
+import { revalidateLogic, useForm } from "@tanstack/react-form";
 import { ListBox, ListBoxItem } from "react-aria-components";
 import { invoke } from "../lib/tauri";
 import {
@@ -11,24 +11,95 @@ import {
   Text,
   ProgressCircle,
 } from "@react-spectrum/s2";
+import * as z from "zod";
 import type { NixSearchResults } from "../types/nix";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
-function Index() {
-  const [searchQuery, setSearchQuery] = useState("");
+const searchForm = z.object({
+  query: z.string().min(1),
+});
 
+type SearchForm = z.infer<typeof searchForm>;
+
+const searchFormDefaultValue = {
+  query: "",
+};
+
+type SearchFormProps = {
+  onSearch: (query: string) => void;
+  isFetching: boolean;
+};
+
+function SearchForm(props: SearchFormProps) {
   const form = useForm({
-    defaultValues: {
-      query: "",
+    defaultValues: searchFormDefaultValue,
+    validationLogic: revalidateLogic(),
+    validators: {
+      onDynamic: searchForm,
     },
     onSubmit: async ({ value }) => {
       if (!value.query.trim()) return;
-      setSearchQuery(value.query);
+      props.onSearch(value.query);
     },
   });
+
+  return (
+    <div className="flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="mb-4">
+        <Heading level={1}>Nix Package Search</Heading>
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+        className="flex gap-2 items-start"
+      >
+        <form.Field
+          name="query"
+          validators={{
+            onDynamic: searchForm.shape.query,
+          }}
+        >
+          {(field) => (
+            <div className="flex-1">
+              <TextField
+                aria-label="Search packages"
+                placeholder="Search nixpkgs..."
+                value={field.state.value}
+                onChange={field.handleChange}
+                isInvalid={!field.state.meta.isValid}
+                errorMessage={field.state.meta.errors
+                  .map((e) => e?.message)
+                  .join(", ")}
+              />
+            </div>
+          )}
+        </form.Field>
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+        >
+          {([canSubmit, isSubmitting]) => (
+            <Button
+              type="submit"
+              variant="accent"
+              isDisabled={!canSubmit}
+              isPending={props.isFetching || isSubmitting}
+            >
+              Search
+            </Button>
+          )}
+        </form.Subscribe>
+      </form>
+    </div>
+  );
+}
+
+function Index() {
+  const [searchQuery, setSearchQuery] = useState("");
 
   const {
     data: results,
@@ -59,53 +130,31 @@ function Index() {
 
   return (
     <div className="flex min-h-0 w-full max-w-4xl flex-1 flex-col gap-6">
-      <div className="flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <div className="mb-4">
-          <Heading level={1}>Nix Package Search</Heading>
-        </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
-          }}
-          className="flex gap-2"
-        >
-          <form.Field name="query">
-            {(field) => (
-              <div className="flex-1">
-                <TextField
-                  aria-label="Search packages"
-                  placeholder="Search nixpkgs..."
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  isDisabled={isFetching}
-                />
-              </div>
-            )}
-          </form.Field>
-          <Button type="submit" variant="accent" isPending={isFetching}>
-            Search
-          </Button>
-        </form>
+      <SearchForm onSearch={setSearchQuery} isFetching={isFetching} />
 
-        {isFetching && (
-          <div className="mt-4 flex items-center gap-3 rounded border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+      {isFetching && (
+        <div className="flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center gap-3 rounded border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
             <ProgressCircle aria-label="Searching" isIndeterminate size="S" />
             <div className="flex flex-col gap-1">
               <Text>Searching nixpkgs...</Text>
               <Text>This may take 10-30 seconds.</Text>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {error && (
-          <div className="mt-4 rounded border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
+      {error && (
+        <div className="flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="rounded border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
             <Text>{String(error)}</Text>
           </div>
-        )}
+        </div>
+      )}
 
-        {!isFetching && !results && !error && (
-          <div className="mt-4 rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+      {!isFetching && !results && !error && (
+        <div className="flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
             <div className="mb-2 font-semibold">Search Tips:</div>
             <div className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-400">
               <Text>• First search may take 10-30 seconds</Text>
@@ -115,8 +164,8 @@ function Index() {
               </Text>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {results && !isFetching && (
         <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
