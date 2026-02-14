@@ -23,12 +23,13 @@
       perSystem =
         {
           pkgs,
+          lib,
           system,
-          config,
           ...
         }:
         let
-          overlay = final: prev:
+          overlay =
+            final: prev:
             let
               nodejs = prev.nodejs_22;
               pnpm = prev.pnpm_10.override { inherit nodejs; };
@@ -41,27 +42,30 @@
             overlays = [ overlay ];
           };
 
-          linuxPackages = with pkgs; [
+          linuxBuildInputs = with pkgs; [
             webkitgtk_4_1
             gtk3
             libsoup_3
             glib-networking
             openssl
-            pkg-config
             librsvg
           ];
 
-          darwinPackages = with pkgs; [
+          linuxNativeBuildInputs = with pkgs; [
+            pkg-config
+          ];
+
+          darwinBuildInputs = with pkgs; [
             darwin.apple_sdk.frameworks.WebKit
             darwin.apple_sdk.frameworks.AppKit
             darwin.apple_sdk.frameworks.CoreServices
           ];
-
-          platformPackages = if pkgs.stdenv.isLinux then linuxPackages else darwinPackages;
         in
         {
           devShells.default = pkgs.mkShell {
-            packages =
+            nativeBuildInputs = lib.optionals pkgs.stdenv.isLinux linuxNativeBuildInputs;
+
+            buildInputs =
               with pkgs;
               [
                 rustc
@@ -72,7 +76,11 @@
                 nodejs
                 pnpm
               ]
-              ++ platformPackages;
+              ++ (if pkgs.stdenv.isLinux then linuxBuildInputs else darwinBuildInputs);
+
+            env = lib.optionalAttrs pkgs.stdenv.isLinux {
+              GIO_MODULE_PATH = "${pkgs.glib-networking}/lib/gio/modules";
+            };
           };
 
           treefmt = {
@@ -83,8 +91,6 @@
               prettier.enable = true;
             };
           };
-
-          formatter = config.treefmt.build.wrapper;
         };
     };
 }
