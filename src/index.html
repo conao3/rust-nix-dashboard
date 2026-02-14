@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rust Nix Dashboard</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: system-ui, -apple-system, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+      .container {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+      }
+      h1 {
+        margin: 0 0 20px 0;
+        font-size: 2.5em;
+      }
+      input {
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        margin-right: 10px;
+      }
+      button {
+        padding: 10px 30px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        background: #667eea;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      button:hover {
+        background: #5568d3;
+      }
+      #greeting {
+        margin-top: 20px;
+        font-size: 1.2em;
+        min-height: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome to Tauri!</h1>
+      <p>Rust + Nix Dashboard</p>
+      <div>
+        <input id="name-input" type="text" placeholder="Enter your name..." />
+        <button onclick="greet()">Greet</button>
+      </div>
+      <div id="greeting"></div>
+    </div>
+
+    <script>
+      const { invoke } = window.__TAURI__.core;
+
+      async function greet() {
+        const nameInput = document.getElementById("name-input");
+        const greetingEl = document.getElementById("greeting");
+        const name = nameInput.value || "World";
+
+        try {
+          const greeting = await invoke("greet", { name });
+          greetingEl.textContent = greeting;
+        } catch (error) {
+          greetingEl.textContent = "Error: " + error;
+        }
+      }
+
+      document.getElementById("name-input").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          greet();
+        }
+      });
+    </script>
+  </body>
+</html>
