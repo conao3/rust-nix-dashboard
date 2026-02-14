@@ -18,7 +18,6 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [query, setQuery] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [elapsedTime, setElapsedTime] = useState(0);
 
   const {
     data: results,
@@ -34,20 +33,6 @@ function Index() {
     },
     enabled: !!searchQuery && searchQuery.trim().length > 0,
   });
-
-  useEffect(() => {
-    if (!isFetching) {
-      setElapsedTime(0);
-      return;
-    }
-
-    const startTime = Date.now();
-    const interval = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [isFetching]);
 
   function search() {
     if (!query.trim()) return;
@@ -71,7 +56,7 @@ function Index() {
               isDisabled={isFetching}
             />
           </div>
-          <Button onPress={search} variant="accent" isDisabled={isFetching}>
+          <Button onPress={search} variant="accent" isPending={isFetching}>
             Search
           </Button>
         </div>
@@ -81,7 +66,7 @@ function Index() {
             <ProgressCircle aria-label="Searching" isIndeterminate size="S" />
             <div className="flex flex-col gap-1">
               <Text>Searching nixpkgs...</Text>
-              <Text>This may take 10-30 seconds. Elapsed: {elapsedTime}s</Text>
+              <Text>This may take 10-30 seconds.</Text>
             </div>
           </div>
         )}
@@ -110,9 +95,6 @@ function Index() {
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="mb-4 flex items-center justify-between">
             <Heading level={2}>Results ({Object.keys(results).length})</Heading>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Found in {elapsedTime}s
-            </div>
           </div>
           {Object.keys(results).length === 0 ? (
             <div className="rounded border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
