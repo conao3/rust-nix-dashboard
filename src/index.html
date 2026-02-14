@@ -66,10 +66,10 @@
       <div id="greeting"></div>
     </div>
 
-    <script>
-      const { invoke } = window.__TAURI__.core;
+    <script type="module">
+      import { invoke } from "@tauri-apps/api/core";
 
-      async function greet() {
+      window.greet = async function() {
         const nameInput = document.getElementById("name-input");
         const greetingEl = document.getElementById("greeting");
         const name = nameInput.value || "World";
@@ -80,7 +80,7 @@
         } catch (error) {
           greetingEl.textContent = "Error: " + error;
         }
-      }
+      };
 
       document.getElementById("name-input").addEventListener("keypress", (e) => {
         if (e.key === "Enter") {

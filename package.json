@@ -5,6 +5,9 @@
   "scripts": {
     "tauri": "tauri"
   },
+  "dependencies": {
+    "@tauri-apps/api": "^2.1.0"
+  },
   "devDependencies": {
     "@tauri-apps/cli": "^2.1.0"
   }
