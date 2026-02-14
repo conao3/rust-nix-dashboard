@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import optimizeLocales from "@react-aria/optimize-locales-plugin";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     TanStackRouterVite(),
     react(),
@@ -17,6 +17,9 @@ export default defineConfig({
     },
   ],
   clearScreen: false,
+  build: {
+    sourcemap: mode === "development",
+  },
   server: {
     port: 1420,
     strictPort: true,
@@ -24,4 +27,4 @@ export default defineConfig({
       ignored: ["**/src-tauri/**"],
     },
   },
-});
+}));
