@@ -82,3 +82,13 @@ export interface NixStoreStats {
   usedBytes: number;
   storePathCount: number;
 }
+
+export interface NixGcRootsCategory {
+  count: number;
+  items: string[];
+}
+
+export interface NixGcRootsSummary {
+  total: number;
+  categories: Record<string, NixGcRootsCategory>;
+}

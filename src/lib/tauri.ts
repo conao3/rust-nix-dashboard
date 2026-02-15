@@ -514,10 +514,78 @@ deleting '/nix/store/def456-unused-package-1.0'
     }
     if (cmd === "nix_store_gc_roots") {
       await new Promise((resolve) => setTimeout(resolve, 300));
-      return `/nix/var/nix/profiles/default -> /nix/store/abc123-user-environment
-/nix/var/nix/profiles/per-user/root/profile -> /nix/store/def456-user-environment
-/nix/var/nix/gcroots/auto/abc123 -> /nix/store/xyz789-some-derivation
-/run/current-system -> /nix/store/ghi012-nixos-system-hostname-24.05` as T;
+      return JSON.stringify({
+        total: 19666,
+        categories: {
+          "Development directories": {
+            count: 406,
+            items: [
+              "/home/conao/dev/project1/.direnv/flake-profile -> /nix/store/abc123-env",
+              "/home/conao/dev/project2/.direnv/flake-profile -> /nix/store/def456-env",
+            ],
+          },
+          "Temporary roots": {
+            count: 444,
+            items: [
+              "{temp:643409} -> /nix/store/xyz789-temp",
+              "{temp:643410} -> /nix/store/uvw012-temp",
+            ],
+          },
+          "Running processes": {
+            count: 3140,
+            items: [
+              "/proc/937630/environ -> /nix/store/proc123-env",
+              "/proc/979787/environ -> /nix/store/proc456-env",
+            ],
+          },
+          "System profiles": {
+            count: 174,
+            items: [
+              "/nix/var/nix/profiles/default -> /nix/store/sys123-profile",
+              "/nix/var/nix/profiles/system -> /nix/store/sys456-profile",
+            ],
+          },
+          "User profiles": {
+            count: 89,
+            items: [
+              "/home/conao/.local/state/nix/profiles/profile -> /nix/store/user123-profile",
+            ],
+          },
+          "Home Manager": {
+            count: 41,
+            items: [
+              "/home/conao/.local/state/home-manager/gcroots/current-home -> /nix/store/hm123-gen",
+              "/home/conao/.local/state/nix/profiles/home-manager-47-link -> /nix/store/hm456-gen",
+            ],
+          },
+          "Cache directories": {
+            count: 234,
+            items: [
+              "/home/conao/.cache/nix/flake-registry.json -> /nix/store/cache123-registry",
+            ],
+          },
+          "GC roots": {
+            count: 1567,
+            items: [
+              "/nix/var/nix/gcroots/auto/abc123 -> /nix/store/gcroot123-drv",
+            ],
+          },
+          "Runtime state": {
+            count: 89,
+            items: ["/run/current-system -> /nix/store/runtime123-system"],
+          },
+          "Home directory": {
+            count: 456,
+            items: [
+              "/home/conao/.config/app/link -> /nix/store/home123-config",
+            ],
+          },
+          Other: {
+            count: 13026,
+            items: ["/unknown/path -> /nix/store/other123-unknown"],
+          },
+        },
+      }) as T;
     }
     throw new Error(
       "Tauri is not available. Please run 'make dev' instead of 'make dev-web' to use Tauri features.",

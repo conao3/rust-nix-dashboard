@@ -258,7 +258,66 @@ fn nix_store_gc_roots_sync() -> Result<String, String> {
     let stdout =
         String::from_utf8(output.stdout).map_err(|e| format!("Failed to parse output: {}", e))?;
 
-    Ok(stdout)
+    let lines: Vec<&str> = stdout.lines().collect();
+    let total = lines.len();
+
+    let mut categories: std::collections::HashMap<&str, Vec<String>> =
+        std::collections::HashMap::new();
+
+    for line in &lines {
+        if let Some(root_path) = line.split(" -> ").next() {
+            let category = if root_path.starts_with("/home/") && root_path.contains("/dev/") {
+                "Development directories"
+            } else if root_path.starts_with("/home/") && root_path.contains(".cache") {
+                "Cache directories"
+            } else if root_path.starts_with("/home/") && root_path.contains("home-manager") {
+                "Home Manager"
+            } else if root_path.starts_with("/home/")
+                && root_path.contains(".local/state/nix/profiles")
+            {
+                "User profiles"
+            } else if root_path.starts_with("/nix/var/nix/profiles") {
+                "System profiles"
+            } else if root_path.starts_with("/nix/var/nix/gcroots") {
+                "GC roots"
+            } else if root_path.starts_with("/proc/") {
+                "Running processes"
+            } else if root_path.starts_with("{temp:") {
+                "Temporary roots"
+            } else if root_path.starts_with("/run/") {
+                "Runtime state"
+            } else if root_path.starts_with("/home/") {
+                "Home directory"
+            } else {
+                "Other"
+            };
+
+            categories
+                .entry(category)
+                .or_insert_with(Vec::new)
+                .push(line.to_string());
+        }
+    }
+
+    let categories_with_counts: std::collections::HashMap<&str, serde_json::Value> = categories
+        .iter()
+        .map(|(k, v)| {
+            (
+                *k,
+                serde_json::json!({
+                    "count": v.len(),
+                    "items": v,
+                }),
+            )
+        })
+        .collect();
+
+    let result = serde_json::json!({
+        "total": total,
+        "categories": categories_with_counts,
+    });
+
+    Ok(result.to_string())
 }
 
 #[tauri::command]

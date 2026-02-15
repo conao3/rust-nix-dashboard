@@ -2,8 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "../lib/tauri";
-import { Button, Heading, Text, ProgressCircle } from "@react-spectrum/s2";
-import type { NixStoreStats } from "../types/nix";
+import {
+  Button,
+  Heading,
+  Text,
+  ProgressCircle,
+  Accordion,
+  AccordionItem,
+  AccordionItemTitle,
+  AccordionItemPanel,
+  Badge,
+} from "@react-spectrum/s2";
+import type { NixStoreStats, NixGcRootsSummary } from "../types/nix";
 import Anser from "anser";
 import { filesize } from "filesize";
 
@@ -26,13 +36,14 @@ function Store() {
   });
 
   const {
-    data: gcRoots,
+    data: gcRootsSummary,
     isFetching: isFetchingGcRoots,
     refetch: refetchGcRoots,
   } = useQuery({
     queryKey: ["nix-store-gc-roots"],
     queryFn: async () => {
-      return await invoke<string>("nix_store_gc_roots");
+      const resultJson = await invoke<string>("nix_store_gc_roots");
+      return JSON.parse(resultJson) as NixGcRootsSummary;
     },
     enabled: showGcRoots,
   });
@@ -154,11 +165,42 @@ function Store() {
                 <Text>Loading GC roots...</Text>
               </div>
             )}
-            {!isFetchingGcRoots && gcRoots && (
-              <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-                <pre className="whitespace-pre-wrap text-sm font-mono">
-                  {gcRoots}
-                </pre>
+            {!isFetchingGcRoots && gcRootsSummary && (
+              <div className="flex flex-col gap-3">
+                <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                  <div className="mb-2 text-sm font-semibold">
+                    Total GC Roots
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {gcRootsSummary.total.toLocaleString()}
+                  </div>
+                </div>
+                <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                  <div className="mb-3 text-sm font-semibold">
+                    Categories Breakdown
+                  </div>
+                  <Accordion>
+                    {Object.entries(gcRootsSummary.categories)
+                      .sort((a, b) => b[1].count - a[1].count)
+                      .map(([category, data]) => (
+                        <AccordionItem key={category} id={category}>
+                          <AccordionItemTitle>
+                            <div>{category}</div>
+                            <Badge>{data.count.toLocaleString()}</Badge>
+                          </AccordionItemTitle>
+                          <AccordionItemPanel>
+                            <div className="max-h-64 overflow-auto rounded border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
+                              <pre className="whitespace-pre-wrap text-xs font-mono">
+                                {data.items.slice(0, 100).join("\n")}
+                                {data.items.length > 100 &&
+                                  `\n\n... and ${data.items.length - 100} more`}
+                              </pre>
+                            </div>
+                          </AccordionItemPanel>
+                        </AccordionItem>
+                      ))}
+                  </Accordion>
+                </div>
               </div>
             )}
           </div>
