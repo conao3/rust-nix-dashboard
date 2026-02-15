@@ -407,6 +407,22 @@ const MOCK_DEPENDENCIES: Record<string, Record<string, unknown>> = {
   },
 };
 
+const MOCK_PROFILE_LIST = {
+  elements: {
+    hello: {
+      active: true,
+      priority: 5,
+      storePaths: ["/nix/store/mi08jhbcjib1i1kgvbd0fxn2yrnzdv4a-hello-2.12.2"],
+    },
+    git: {
+      active: true,
+      priority: 5,
+      storePaths: ["/nix/store/xyz789-git-2.43.0"],
+    },
+  },
+  version: 3,
+};
+
 export async function invoke<T>(
   cmd: string,
   args?: Record<string, unknown>,
@@ -434,6 +450,20 @@ export async function invoke<T>(
         throw new Error(`Dependencies not found: ${packageKey}`);
       }
       return JSON.stringify(deps) as T;
+    }
+    if (cmd === "nix_profile_list") {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return JSON.stringify(MOCK_PROFILE_LIST) as T;
+    }
+    if (cmd === "nix_profile_remove") {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log("Mock removing profile index:", args?.index);
+      return "Package removed successfully" as T;
+    }
+    if (cmd === "nix_profile_upgrade") {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Mock upgrading profile index:", args?.index);
+      return "Package upgraded successfully" as T;
     }
     throw new Error(
       "Tauri is not available. Please run 'make dev' instead of 'make dev-web' to use Tauri features.",

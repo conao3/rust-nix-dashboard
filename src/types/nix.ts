@@ -66,3 +66,14 @@ export interface NixDerivation {
 }
 
 export type NixDerivationShowResult = Record<string, NixDerivation>;
+
+export interface NixProfileElement {
+  active: boolean;
+  priority: number;
+  storePaths: string[];
+}
+
+export interface NixProfileListResult {
+  elements: Record<string, NixProfileElement>;
+  version: number;
+}
