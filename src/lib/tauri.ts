@@ -465,6 +465,22 @@ export async function invoke<T>(
       console.log("Mock upgrading profile index:", args?.index);
       return "Package upgraded successfully" as T;
     }
+    if (cmd === "nix_profile_history") {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return `Version 1 (current):
+  Added packages:
+    - hello-2.12.2
+    - git-2.43.0
+
+Version 2:
+  Added packages:
+    - hello-2.12.2` as T;
+    }
+    if (cmd === "nix_profile_rollback") {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log("Mock rolling back profile");
+      return "Rolled back to previous generation" as T;
+    }
     throw new Error(
       "Tauri is not available. Please run 'make dev' instead of 'make dev-web' to use Tauri features.",
     );

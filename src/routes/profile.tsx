@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "../lib/tauri";
 import { Button, Heading, Text, ProgressCircle } from "@react-spectrum/s2";
 import type { NixProfileListResult } from "../types/nix";
+import Anser from "anser";
 
 export const Route = createFileRoute("/profile")({
   component: Profile,
@@ -10,6 +12,7 @@ export const Route = createFileRoute("/profile")({
 
 function Profile() {
   const queryClient = useQueryClient();
+  const [showHistory, setShowHistory] = useState(false);
 
   const {
     data: profileData,
@@ -42,9 +45,36 @@ function Profile() {
     },
   });
 
+  const {
+    data: historyData,
+    isFetching: isFetchingHistory,
+    refetch: refetchHistory,
+  } = useQuery({
+    queryKey: ["nix-profile-history"],
+    queryFn: async () => {
+      return await invoke<string>("nix_profile_history");
+    },
+    enabled: showHistory,
+  });
+
+  const rollbackMutation = useMutation({
+    mutationFn: async () => {
+      await invoke<string>("nix_profile_rollback");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nix-profile-list"] });
+      queryClient.invalidateQueries({ queryKey: ["nix-profile-history"] });
+    },
+  });
+
   const profileEntries = profileData
     ? Object.entries(profileData.elements)
     : [];
+
+  const historyHtml = useMemo(() => {
+    if (!historyData) return "";
+    return Anser.ansiToHtml(historyData, { use_classes: false });
+  }, [historyData]);
 
   return (
     <div className="flex min-h-0 w-full max-w-4xl flex-1 flex-col gap-6">
@@ -52,6 +82,17 @@ function Profile() {
         <div className="mb-4 flex items-center justify-between">
           <Heading level={1}>Installed Packages</Heading>
           <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              onPress={() => {
+                setShowHistory(!showHistory);
+                if (!showHistory) {
+                  refetchHistory();
+                }
+              }}
+            >
+              {showHistory ? "Hide History" : "Show History"}
+            </Button>
             <Button
               variant="secondary"
               onPress={() => refetch()}
@@ -83,6 +124,39 @@ function Profile() {
         {error && (
           <div className="rounded border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
             <Text>{String(error)}</Text>
+          </div>
+        )}
+
+        {showHistory && (
+          <div className="mb-4">
+            <div className="mb-2 flex items-center justify-between">
+              <Heading level={3}>Profile History</Heading>
+              <Button
+                variant="negative"
+                onPress={() => rollbackMutation.mutate()}
+                isPending={rollbackMutation.isPending}
+              >
+                Rollback to Previous
+              </Button>
+            </div>
+            {isFetchingHistory && (
+              <div className="flex items-center gap-3 rounded border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                <ProgressCircle
+                  aria-label="Loading history"
+                  isIndeterminate
+                  size="S"
+                />
+                <Text>Loading profile history...</Text>
+              </div>
+            )}
+            {!isFetchingHistory && historyData && (
+              <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                <pre
+                  className="whitespace-pre-wrap text-sm font-mono"
+                  dangerouslySetInnerHTML={{ __html: historyHtml }}
+                />
+              </div>
+            )}
           </div>
         )}
 

@@ -127,6 +127,37 @@ fn nix_profile_upgrade_sync(index: Option<u32>) -> Result<String, String> {
     Ok("Package upgraded successfully".to_string())
 }
 
+fn nix_profile_history_sync() -> Result<String, String> {
+    let output = Command::new("nix")
+        .args(["profile", "history"])
+        .output()
+        .map_err(|e| format!("Failed to execute nix profile history: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("nix profile history failed: {}", stderr));
+    }
+
+    let stdout =
+        String::from_utf8(output.stdout).map_err(|e| format!("Failed to parse output: {}", e))?;
+
+    Ok(stdout)
+}
+
+fn nix_profile_rollback_sync() -> Result<String, String> {
+    let output = Command::new("nix")
+        .args(["profile", "rollback"])
+        .output()
+        .map_err(|e| format!("Failed to execute nix profile rollback: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("nix profile rollback failed: {}", stderr));
+    }
+
+    Ok("Rolled back to previous generation".to_string())
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -174,6 +205,20 @@ async fn nix_profile_upgrade(index: Option<u32>) -> Result<String, String> {
         .map_err(|e| format!("Task join error: {}", e))?
 }
 
+#[tauri::command]
+async fn nix_profile_history() -> Result<String, String> {
+    tokio::task::spawn_blocking(nix_profile_history_sync)
+        .await
+        .map_err(|e| format!("Task join error: {}", e))?
+}
+
+#[tauri::command]
+async fn nix_profile_rollback() -> Result<String, String> {
+    tokio::task::spawn_blocking(nix_profile_rollback_sync)
+        .await
+        .map_err(|e| format!("Task join error: {}", e))?
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -183,7 +228,9 @@ fn main() {
             nix_package_dependencies,
             nix_profile_list,
             nix_profile_remove,
-            nix_profile_upgrade
+            nix_profile_upgrade,
+            nix_profile_history,
+            nix_profile_rollback
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
