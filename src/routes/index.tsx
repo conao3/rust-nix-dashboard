@@ -22,6 +22,10 @@ import {
   TreeViewItemContent,
   Picker,
   PickerItem,
+  Accordion,
+  AccordionItem,
+  AccordionItemTitle,
+  AccordionItemPanel,
 } from "@react-spectrum/s2";
 import Copy from "@react-spectrum/s2/icons/Copy";
 import Checkmark from "@react-spectrum/s2/icons/Checkmark";
@@ -459,11 +463,28 @@ function PackageDetail(props: PackageDetailProps) {
                   </Text>
                 </div>
               ) : dependencies && Object.keys(dependencies).length > 0 ? (
-                <div className="max-h-64 overflow-auto rounded border border-gray-200 p-2 dark:border-gray-700">
-                  <TreeView aria-label="Package dependencies">
-                    {buildDependencyTree(dependencies)}
-                  </TreeView>
-                </div>
+                <Accordion>
+                  <AccordionItem id="tree-view">
+                    <AccordionItemTitle>Tree View</AccordionItemTitle>
+                    <AccordionItemPanel>
+                      <div className="max-h-64 overflow-auto rounded border border-gray-200 p-2 dark:border-gray-700">
+                        <TreeView aria-label="Package dependencies">
+                          {buildDependencyTree(dependencies)}
+                        </TreeView>
+                      </div>
+                    </AccordionItemPanel>
+                  </AccordionItem>
+                  <AccordionItem id="raw-json">
+                    <AccordionItemTitle>Raw JSON</AccordionItemTitle>
+                    <AccordionItemPanel>
+                      <div className="max-h-64 overflow-auto rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
+                        <pre className="whitespace-pre-wrap text-xs font-mono">
+                          {JSON.stringify(dependencies, null, 2)}
+                        </pre>
+                      </div>
+                    </AccordionItemPanel>
+                  </AccordionItem>
+                </Accordion>
               ) : (
                 <Text UNSAFE_className="text-sm italic text-gray-400 dark:text-gray-600">
                   Not available
