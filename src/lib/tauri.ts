@@ -512,6 +512,13 @@ deleting '/nix/store/def456-unused-package-1.0'
         storePathCount: 1234,
       }) as T;
     }
+    if (cmd === "nix_store_gc_roots") {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return `/nix/var/nix/profiles/default -> /nix/store/abc123-user-environment
+/nix/var/nix/profiles/per-user/root/profile -> /nix/store/def456-user-environment
+/nix/var/nix/gcroots/auto/abc123 -> /nix/store/xyz789-some-derivation
+/run/current-system -> /nix/store/ghi012-nixos-system-hostname-24.05` as T;
+    }
     throw new Error(
       "Tauri is not available. Please run 'make dev' instead of 'make dev-web' to use Tauri features.",
     );

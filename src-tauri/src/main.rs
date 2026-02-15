@@ -244,6 +244,23 @@ fn nix_store_stats_sync() -> Result<String, String> {
     .to_string())
 }
 
+fn nix_store_gc_roots_sync() -> Result<String, String> {
+    let output = Command::new("nix-store")
+        .args(["--gc", "--print-roots"])
+        .output()
+        .map_err(|e| format!("Failed to execute nix-store --gc --print-roots: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("nix-store --gc --print-roots failed: {}", stderr));
+    }
+
+    let stdout =
+        String::from_utf8(output.stdout).map_err(|e| format!("Failed to parse output: {}", e))?;
+
+    Ok(stdout)
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -333,6 +350,13 @@ async fn nix_store_stats() -> Result<String, String> {
         .map_err(|e| format!("Task join error: {}", e))?
 }
 
+#[tauri::command]
+async fn nix_store_gc_roots() -> Result<String, String> {
+    tokio::task::spawn_blocking(nix_store_gc_roots_sync)
+        .await
+        .map_err(|e| format!("Task join error: {}", e))?
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -348,7 +372,8 @@ fn main() {
             nix_store_gc,
             nix_store_optimise,
             nix_store_info,
-            nix_store_stats
+            nix_store_stats,
+            nix_store_gc_roots
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

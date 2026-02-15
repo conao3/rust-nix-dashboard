@@ -15,6 +15,7 @@ function Store() {
   const queryClient = useQueryClient();
   const [gcOutput, setGcOutput] = useState<string>("");
   const [optimiseOutput, setOptimiseOutput] = useState<string>("");
+  const [showGcRoots, setShowGcRoots] = useState(false);
 
   const { data: storeStats, isFetching: isFetchingStats } = useQuery({
     queryKey: ["nix-store-stats"],
@@ -22,6 +23,18 @@ function Store() {
       const resultJson = await invoke<string>("nix_store_stats");
       return JSON.parse(resultJson) as NixStoreStats;
     },
+  });
+
+  const {
+    data: gcRoots,
+    isFetching: isFetchingGcRoots,
+    refetch: refetchGcRoots,
+  } = useQuery({
+    queryKey: ["nix-store-gc-roots"],
+    queryFn: async () => {
+      return await invoke<string>("nix_store_gc_roots");
+    },
+    enabled: showGcRoots,
   });
 
   const gcDryRunMutation = useMutation({
@@ -105,6 +118,49 @@ function Store() {
                 packages in /nix/store
               </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="mb-4 flex items-center justify-between">
+          <Heading level={2}>GC Roots</Heading>
+          <Button
+            variant="secondary"
+            onPress={() => {
+              setShowGcRoots(!showGcRoots);
+              if (!showGcRoots) {
+                refetchGcRoots();
+              }
+            }}
+          >
+            {showGcRoots ? "Hide Roots" : "Show Roots"}
+          </Button>
+        </div>
+        <div className="mb-2">
+          <Text>
+            GC roots prevent store paths from being garbage collected.
+          </Text>
+        </div>
+        {showGcRoots && (
+          <div>
+            {isFetchingGcRoots && (
+              <div className="flex items-center gap-3 rounded border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                <ProgressCircle
+                  aria-label="Loading GC roots"
+                  isIndeterminate
+                  size="S"
+                />
+                <Text>Loading GC roots...</Text>
+              </div>
+            )}
+            {!isFetchingGcRoots && gcRoots && (
+              <div className="rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                <pre className="whitespace-pre-wrap text-sm font-mono">
+                  {gcRoots}
+                </pre>
+              </div>
+            )}
           </div>
         )}
       </div>
