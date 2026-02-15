@@ -1,9 +1,30 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use nix::sys::statvfs::statvfs;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct NixDashboardConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    system_architecture: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    nixos_rebuild: Option<NixosRebuildConfig>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct NixosRebuildConfig {
+    flake_path: String,
+    hostname: String,
+    pre_commands: Vec<String>,
+    rebuild_options: Vec<String>,
+    use_sudo: bool,
+    use_nom: bool,
+}
 
 fn nix_search_sync(query: &str, system: &str) -> Result<String, String> {
     let output = Command::new("nix")
@@ -320,6 +341,45 @@ fn nix_store_gc_roots_sync() -> Result<String, String> {
     Ok(result.to_string())
 }
 
+fn get_config_path() -> Result<std::path::PathBuf, String> {
+    let home_dir = std::env::var("HOME").map_err(|_| "HOME environment variable not set")?;
+    let config_dir = Path::new(&home_dir).join(".config").join("nix-dashboard");
+    fs::create_dir_all(&config_dir)
+        .map_err(|e| format!("Failed to create config directory: {}", e))?;
+    Ok(config_dir.join("config.toml"))
+}
+
+fn load_config_sync() -> Result<String, String> {
+    let config_path = get_config_path()?;
+
+    if !config_path.exists() {
+        return Ok("{}".to_string());
+    }
+
+    let toml_content = fs::read_to_string(&config_path)
+        .map_err(|e| format!("Failed to read config file: {}", e))?;
+
+    let config: NixDashboardConfig =
+        toml::from_str(&toml_content).map_err(|e| format!("Failed to parse TOML: {}", e))?;
+
+    serde_json::to_string(&config).map_err(|e| format!("Failed to serialize to JSON: {}", e))
+}
+
+fn save_config_sync(config_json: &str) -> Result<String, String> {
+    let config_path = get_config_path()?;
+
+    let config: NixDashboardConfig =
+        serde_json::from_str(config_json).map_err(|e| format!("Invalid JSON: {}", e))?;
+
+    let toml_content = toml::to_string_pretty(&config)
+        .map_err(|e| format!("Failed to serialize to TOML: {}", e))?;
+
+    fs::write(&config_path, toml_content)
+        .map_err(|e| format!("Failed to write config file: {}", e))?;
+
+    Ok("Config saved successfully".to_string())
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -416,6 +476,20 @@ async fn nix_store_gc_roots() -> Result<String, String> {
         .map_err(|e| format!("Task join error: {}", e))?
 }
 
+#[tauri::command]
+async fn load_config() -> Result<String, String> {
+    tokio::task::spawn_blocking(load_config_sync)
+        .await
+        .map_err(|e| format!("Task join error: {}", e))?
+}
+
+#[tauri::command]
+async fn save_config(config_json: String) -> Result<String, String> {
+    tokio::task::spawn_blocking(move || save_config_sync(&config_json))
+        .await
+        .map_err(|e| format!("Task join error: {}", e))?
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -432,7 +506,9 @@ fn main() {
             nix_store_optimise,
             nix_store_info,
             nix_store_stats,
-            nix_store_gc_roots
+            nix_store_gc_roots,
+            load_config,
+            save_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

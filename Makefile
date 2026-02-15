@@ -14,6 +14,10 @@ dev-web:
 build:
 	pnpm tauri build
 
+.PHONY: typecheck
+typecheck:
+	pnpm tsc --noEmit
+
 .PHONY: clean
 clean:
 	rm -rf node_modules dist target src-tauri/target

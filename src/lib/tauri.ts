@@ -587,6 +587,30 @@ deleting '/nix/store/def456-unused-package-1.0'
         },
       }) as T;
     }
+    if (cmd === "load_config") {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return JSON.stringify({
+        systemArchitecture: "x86_64-linux",
+        nixosRebuild: {
+          flakePath: "~/dev/repos/nixos-configuration",
+          hostname: "conao-nixos-helios",
+          preCommands: ["nix flake update", "git add ."],
+          rebuildOptions: [
+            "--log-format",
+            "internal-json",
+            "-v",
+            "--show-trace",
+          ],
+          useSudo: true,
+          useNom: true,
+        },
+      }) as T;
+    }
+    if (cmd === "save_config") {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      console.log("Mock saving config:", args?.configJson);
+      return "Config saved successfully" as T;
+    }
     throw new Error(
       "Tauri is not available. Please run 'make dev' instead of 'make dev-web' to use Tauri features.",
     );
