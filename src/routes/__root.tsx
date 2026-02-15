@@ -63,6 +63,12 @@ export const Route = createRootRoute({
                   Profile
                 </Link>
                 <Link
+                  to="/store"
+                  className="rounded-md px-4 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 [&.active]:bg-gray-200 dark:[&.active]:bg-gray-700"
+                >
+                  Store
+                </Link>
+                <Link
                   to="/about"
                   className="rounded-md px-4 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 [&.active]:bg-gray-200 dark:[&.active]:bg-gray-700"
                 >

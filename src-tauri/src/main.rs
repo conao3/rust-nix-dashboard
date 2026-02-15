@@ -1,5 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use nix::sys::statvfs::statvfs;
+use std::fs;
+use std::path::Path;
 use std::process::Command;
 
 fn nix_search_sync(query: &str, system: &str) -> Result<String, String> {
@@ -158,6 +161,89 @@ fn nix_profile_rollback_sync() -> Result<String, String> {
     Ok("Rolled back to previous generation".to_string())
 }
 
+fn nix_store_gc_sync(dry_run: bool) -> Result<String, String> {
+    let mut args = vec!["store", "gc"];
+    if dry_run {
+        args.push("--dry-run");
+    }
+
+    let output = Command::new("nix")
+        .args(&args)
+        .output()
+        .map_err(|e| format!("Failed to execute nix store gc: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("nix store gc failed: {}", stderr));
+    }
+
+    let stdout =
+        String::from_utf8(output.stdout).map_err(|e| format!("Failed to parse output: {}", e))?;
+    let stderr =
+        String::from_utf8(output.stderr).map_err(|e| format!("Failed to parse stderr: {}", e))?;
+
+    Ok(format!("{}{}", stdout, stderr))
+}
+
+fn nix_store_optimise_sync() -> Result<String, String> {
+    let output = Command::new("nix")
+        .args(["store", "optimise"])
+        .output()
+        .map_err(|e| format!("Failed to execute nix store optimise: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("nix store optimise failed: {}", stderr));
+    }
+
+    let stdout =
+        String::from_utf8(output.stdout).map_err(|e| format!("Failed to parse output: {}", e))?;
+    let stderr =
+        String::from_utf8(output.stderr).map_err(|e| format!("Failed to parse stderr: {}", e))?;
+
+    Ok(format!("{}{}", stdout, stderr))
+}
+
+fn nix_store_info_sync() -> Result<String, String> {
+    let output = Command::new("du")
+        .args(["-sh", "/nix/store"])
+        .output()
+        .map_err(|e| format!("Failed to execute du: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("du failed: {}", stderr));
+    }
+
+    let stdout =
+        String::from_utf8(output.stdout).map_err(|e| format!("Failed to parse output: {}", e))?;
+
+    Ok(stdout)
+}
+
+fn nix_store_stats_sync() -> Result<String, String> {
+    let store_path = Path::new("/nix/store");
+
+    let stat = statvfs(store_path).map_err(|e| format!("Failed to get filesystem stats: {}", e))?;
+
+    let block_size = stat.block_size() as u64;
+    let total_blocks = stat.blocks();
+    let free_blocks = stat.blocks_free();
+    let used_blocks = total_blocks - free_blocks;
+
+    let used_bytes = used_blocks * block_size;
+
+    let entries = fs::read_dir(store_path)
+        .map_err(|e| format!("Failed to read /nix/store: {}", e))?
+        .count();
+
+    Ok(serde_json::json!({
+        "usedBytes": used_bytes,
+        "storePathCount": entries,
+    })
+    .to_string())
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -219,6 +305,34 @@ async fn nix_profile_rollback() -> Result<String, String> {
         .map_err(|e| format!("Task join error: {}", e))?
 }
 
+#[tauri::command]
+async fn nix_store_gc(dry_run: bool) -> Result<String, String> {
+    tokio::task::spawn_blocking(move || nix_store_gc_sync(dry_run))
+        .await
+        .map_err(|e| format!("Task join error: {}", e))?
+}
+
+#[tauri::command]
+async fn nix_store_optimise() -> Result<String, String> {
+    tokio::task::spawn_blocking(nix_store_optimise_sync)
+        .await
+        .map_err(|e| format!("Task join error: {}", e))?
+}
+
+#[tauri::command]
+async fn nix_store_info() -> Result<String, String> {
+    tokio::task::spawn_blocking(nix_store_info_sync)
+        .await
+        .map_err(|e| format!("Task join error: {}", e))?
+}
+
+#[tauri::command]
+async fn nix_store_stats() -> Result<String, String> {
+    tokio::task::spawn_blocking(nix_store_stats_sync)
+        .await
+        .map_err(|e| format!("Task join error: {}", e))?
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -230,7 +344,11 @@ fn main() {
             nix_profile_remove,
             nix_profile_upgrade,
             nix_profile_history,
-            nix_profile_rollback
+            nix_profile_rollback,
+            nix_store_gc,
+            nix_store_optimise,
+            nix_store_info,
+            nix_store_stats
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

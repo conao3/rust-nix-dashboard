@@ -77,3 +77,8 @@ export interface NixProfileListResult {
   elements: Record<string, NixProfileElement>;
   version: number;
 }
+
+export interface NixStoreStats {
+  usedBytes: number;
+  storePathCount: number;
+}

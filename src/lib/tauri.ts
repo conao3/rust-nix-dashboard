@@ -481,6 +481,37 @@ Version 2:
       console.log("Mock rolling back profile");
       return "Rolled back to previous generation" as T;
     }
+    if (cmd === "nix_store_gc") {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const dryRun = args?.dryRun;
+      if (dryRun) {
+        return `finding garbage collector roots...
+determining live/dead paths...
+/nix/store/abc123-hello-2.12.2
+/nix/store/def456-unused-package-1.0
+2 store paths deleted, 45.6 MiB freed (dry run)` as T;
+      }
+      return `deleting garbage...
+deleting '/nix/store/abc123-hello-2.12.2'
+deleting '/nix/store/def456-unused-package-1.0'
+2 store paths deleted, 45.6 MiB freed` as T;
+    }
+    if (cmd === "nix_store_optimise") {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return `optimising store...
+123.4 MiB freed by hard-linking 456 files` as T;
+    }
+    if (cmd === "nix_store_info") {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return "12G\t/nix/store" as T;
+    }
+    if (cmd === "nix_store_stats") {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return JSON.stringify({
+        usedBytes: 12884901888,
+        storePathCount: 1234,
+      }) as T;
+    }
     throw new Error(
       "Tauri is not available. Please run 'make dev' instead of 'make dev-web' to use Tauri features.",
     );
