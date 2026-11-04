@@ -8,7 +8,7 @@ use nix::commands;
 fn main() {
     tauri::Builder::default()
         .setup(|_app| {
-            tokio::spawn(async {
+            tauri::async_runtime::spawn(async {
                 if let Err(e) = grpc::server::start_grpc_server().await {
                     eprintln!("gRPC server error: {}", e);
                 }
