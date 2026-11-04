@@ -51,11 +51,11 @@
                 nodejs_26
                 (pnpm.override { nodejs-slim = nodejs-slim_26; })
               ]
-              ++ lib.optionals stdenv.isLinux [ pkg-config ];
+              ++ lib.optionals stdenv.hostPlatform.isLinux [ pkg-config ];
 
-            buildInputs = lib.optionals pkgs.stdenv.isLinux linuxBuildInputs;
+            buildInputs = lib.optionals pkgs.stdenv.hostPlatform.isLinux linuxBuildInputs;
 
-            env = lib.optionalAttrs pkgs.stdenv.isLinux {
+            env = lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
               GIO_MODULE_PATH = "${pkgs.glib-networking}/lib/gio/modules";
             };
           };
