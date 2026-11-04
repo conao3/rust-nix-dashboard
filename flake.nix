@@ -2,7 +2,7 @@
   description = "Rust + Tauri development environment";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
@@ -27,18 +27,7 @@
           ...
         }:
         let
-          overlay =
-            final: prev:
-            let
-              nodejs = prev.nodejs_latest;
-            in
-            {
-              inherit nodejs;
-            };
-          pkgs = import inputs.nixpkgs {
-            inherit system;
-            overlays = [ overlay ];
-          };
+          pkgs = inputs.nixpkgs.legacyPackages.${system};
 
           linuxBuildInputs = with pkgs; [
             webkitgtk_4_1
@@ -47,12 +36,6 @@
             glib-networking
             openssl
             librsvg
-          ];
-
-          darwinBuildInputs = with pkgs; [
-            darwin.apple_sdk.frameworks.WebKit
-            darwin.apple_sdk.frameworks.AppKit
-            darwin.apple_sdk.frameworks.CoreServices
           ];
         in
         {
@@ -65,13 +48,13 @@
                 rust-analyzer
                 rustfmt
                 clippy
-                nodejs
-                pnpm
+                nodejs_26
+                (pnpm.override { nodejs-slim = nodejs-slim_26; })
                 protobuf
               ]
               ++ lib.optionals stdenv.isLinux [ pkg-config ];
 
-            buildInputs = if pkgs.stdenv.isLinux then linuxBuildInputs else darwinBuildInputs;
+            buildInputs = lib.optionals pkgs.stdenv.isLinux linuxBuildInputs;
 
             env = lib.optionalAttrs pkgs.stdenv.isLinux {
               GIO_MODULE_PATH = "${pkgs.glib-networking}/lib/gio/modules";
