@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package nix_dashboard;
+
+service NixDashboard {
+  rpc Search(SearchRequest) returns (SearchResponse);
+  rpc GetPackageDetail(PackageDetailRequest) returns (PackageDetailResponse);
+  rpc GetPackageDependencies(PackageDependenciesRequest) returns (PackageDependenciesResponse);
+
+  rpc ProfileList(ProfileListRequest) returns (ProfileListResponse);
+  rpc ProfileRemove(ProfileRemoveRequest) returns (ProfileRemoveResponse);
+  rpc ProfileUpgrade(ProfileUpgradeRequest) returns (ProfileUpgradeResponse);
+  rpc ProfileHistory(ProfileHistoryRequest) returns (ProfileHistoryResponse);
+  rpc ProfileRollback(ProfileRollbackRequest) returns (ProfileRollbackResponse);
+
+  rpc StoreGc(StoreGcRequest) returns (StoreGcResponse);
+  rpc StoreOptimise(StoreOptimiseRequest) returns (StoreOptimiseResponse);
+  rpc StoreInfo(StoreInfoRequest) returns (StoreInfoResponse);
+  rpc StoreStats(StoreStatsRequest) returns (StoreStatsResponse);
+  rpc StoreGcRoots(StoreGcRootsRequest) returns (StoreGcRootsResponse);
+
+  rpc LoadConfig(LoadConfigRequest) returns (LoadConfigResponse);
+  rpc SaveConfig(SaveConfigRequest) returns (SaveConfigResponse);
+}
+
+message SearchRequest {
+  string query = 1;
+  string system = 2;
+}
+
+message SearchResponse {
+  string json_result = 1;
+}
+
+message PackageDetailRequest {
+  string package_key = 1;
+}
+
+message PackageDetailResponse {
+  string json_result = 1;
+}
+
+message PackageDependenciesRequest {
+  string package_key = 1;
+}
+
+message PackageDependenciesResponse {
+  string json_result = 1;
+}
+
+message ProfileListRequest {}
+
+message ProfileListResponse {
+  string json_result = 1;
+}
+
+message ProfileRemoveRequest {
+  uint32 index = 1;
+}
+
+message ProfileRemoveResponse {
+  string message = 1;
+}
+
+message ProfileUpgradeRequest {
+  optional uint32 index = 1;
+}
+
+message ProfileUpgradeResponse {
+  string message = 1;
+}
+
+message ProfileHistoryRequest {}
+
+message ProfileHistoryResponse {
+  string result = 1;
+}
+
+message ProfileRollbackRequest {}
+
+message ProfileRollbackResponse {
+  string message = 1;
+}
+
+message StoreGcRequest {
+  bool dry_run = 1;
+}
+
+message StoreGcResponse {
+  string result = 1;
+}
+
+message StoreOptimiseRequest {}
+
+message StoreOptimiseResponse {
+  string result = 1;
+}
+
+message StoreInfoRequest {}
+
+message StoreInfoResponse {
+  string result = 1;
+}
+
+message StoreStatsRequest {}
+
+message StoreStatsResponse {
+  string json_result = 1;
+}
+
+message StoreGcRootsRequest {}
+
+message StoreGcRootsResponse {
+  string json_result = 1;
+}
+
+message LoadConfigRequest {}
+
+message LoadConfigResponse {
+  string json_result = 1;
+}
+
+message SaveConfigRequest {
+  string config_json = 1;
+}
+
+message SaveConfigResponse {
+  string message = 1;
+}

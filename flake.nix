@@ -50,6 +50,7 @@
                 clippy
                 nodejs_26
                 (pnpm.override { nodejs-slim = nodejs-slim_26; })
+                protobuf
               ]
               ++ lib.optionals stdenv.hostPlatform.isLinux [ pkg-config ];
 
