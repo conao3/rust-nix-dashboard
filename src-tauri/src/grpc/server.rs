@@ -220,11 +220,13 @@ impl NixDashboard for NixDashboardService {
 
 pub async fn start_grpc_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let addr = "[::1]:50051".parse()?;
+    let incoming = tonic::transport::server::TcpIncoming::new(addr, true, None)
+        .map_err(|e| format!("failed to bind {}: {}", addr, e))?;
     let service = NixDashboardService::default();
 
     tonic::transport::Server::builder()
         .add_service(NixDashboardServer::new(service))
-        .serve(addr)
+        .serve_with_incoming(incoming)
         .await?;
 
     Ok(())

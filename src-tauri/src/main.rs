@@ -10,7 +10,7 @@ fn main() {
         .setup(|_app| {
             tauri::async_runtime::spawn(async {
                 if let Err(e) = grpc::server::start_grpc_server().await {
-                    eprintln!("gRPC server error: {}", e);
+                    eprintln!("gRPC server stopped: {}", e);
                 }
             });
             Ok(())

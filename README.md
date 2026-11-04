@@ -96,6 +96,25 @@ make build
 make clean
 ```
 
+## gRPC API
+
+The desktop app also serves the Nix operations over gRPC for external clients (CLIs and other tools). The webview frontend calls the same Rust implementation (`src-tauri/src/nix/`) through Tauri commands.
+
+- Address: `[::1]:50051` (local only), started when the app launches
+- Schema: `src-tauri/proto/nix_dashboard.proto` (service `nix_dashboard.NixDashboard`)
+- Server reflection is not enabled, so pass the proto file to the client
+
+If the port is already in use, the app keeps running without the gRPC API and logs the error to stderr.
+
+Example with [grpcurl](https://github.com/fullstorydev/grpcurl):
+
+```bash
+cd src-tauri
+grpcurl -plaintext -import-path proto -proto nix_dashboard.proto '[::1]:50051' nix_dashboard.NixDashboard/LoadConfig
+grpcurl -plaintext -import-path proto -proto nix_dashboard.proto '[::1]:50051' nix_dashboard.NixDashboard/ProfileList
+grpcurl -plaintext -import-path proto -proto nix_dashboard.proto -d '{"package_key":"hello"}' '[::1]:50051' nix_dashboard.NixDashboard/GetPackageDetail
+```
+
 ## Project Structure
 
 ```
