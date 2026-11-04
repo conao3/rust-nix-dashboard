@@ -2,7 +2,7 @@
   description = "Rust + Tauri development environment";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
@@ -27,18 +27,7 @@
           ...
         }:
         let
-          overlay =
-            final: prev:
-            let
-              nodejs = prev.nodejs_latest;
-            in
-            {
-              inherit nodejs;
-            };
-          pkgs = import inputs.nixpkgs {
-            inherit system;
-            overlays = [ overlay ];
-          };
+          pkgs = inputs.nixpkgs.legacyPackages.${system};
 
           linuxBuildInputs = with pkgs; [
             webkitgtk_4_1
@@ -65,8 +54,8 @@
                 rust-analyzer
                 rustfmt
                 clippy
-                nodejs
-                pnpm
+                nodejs_26
+                (pnpm.override { nodejs-slim = nodejs-slim_26; })
               ]
               ++ lib.optionals stdenv.isLinux [ pkg-config ];
 
