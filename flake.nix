@@ -67,6 +67,7 @@
                 clippy
                 nodejs
                 pnpm
+                protobuf
               ]
               ++ lib.optionals stdenv.isLinux [ pkg-config ];
 
