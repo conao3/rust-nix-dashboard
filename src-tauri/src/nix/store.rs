@@ -133,7 +133,7 @@ pub fn nix_store_gc_roots_sync() -> Result<String, String> {
 
             categories
                 .entry(category)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(line.to_string());
         }
     }
