@@ -37,12 +37,6 @@
             openssl
             librsvg
           ];
-
-          darwinBuildInputs = with pkgs; [
-            darwin.apple_sdk.frameworks.WebKit
-            darwin.apple_sdk.frameworks.AppKit
-            darwin.apple_sdk.frameworks.CoreServices
-          ];
         in
         {
           devShells.default = pkgs.mkShell {
@@ -59,7 +53,7 @@
               ]
               ++ lib.optionals stdenv.isLinux [ pkg-config ];
 
-            buildInputs = if pkgs.stdenv.isLinux then linuxBuildInputs else darwinBuildInputs;
+            buildInputs = lib.optionals pkgs.stdenv.isLinux linuxBuildInputs;
 
             env = lib.optionalAttrs pkgs.stdenv.isLinux {
               GIO_MODULE_PATH = "${pkgs.glib-networking}/lib/gio/modules";
