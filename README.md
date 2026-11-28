@@ -1,4 +1,12 @@
-# Rust Nix Dashboard
+<p align="center"><img src="docs/assets/banner.png" alt="Rust Nix Dashboard: A desktop app to search and manage Nix packages and the Nix store" width="880"></p>
+
+<p align="center"><strong>A desktop app to search and manage Nix packages and the Nix store</strong></p>
+
+<p align="center"><a href="https://github.com/conao3/rust-nix-dashboard/stargazers"><img src="https://img.shields.io/github/stars/conao3/rust-nix-dashboard?style=flat" alt="GitHub stars"></a></p>
+
+<p align="center"><a href="#screens">Screens</a> | <a href="#setup">Setup</a> | <a href="#development">Development</a> | <a href="#grpc-api">gRPC API</a></p>
+
+<h1>Rust Nix Dashboard</h1>
 
 A GUI frontend for Nix package manager, built with Rust + Tauri + React + TypeScript + TanStack Router + Tailwind CSS + Nix.
 
