@@ -7,6 +7,30 @@ A GUI frontend for Nix package manager, built with Rust + Tauri + React + TypeSc
 - **Package Search**: Search nixpkgs repository with `nix search`
 - More features coming soon...
 
+![Package search with the details of the selected package](images/search.png)
+
+The screenshots in this README show the desktop app with made-up sample data.
+
+## Screens
+
+### Profile
+
+![Installed packages in the user profile with upgrade and remove buttons](images/profile.png)
+
+Lists the packages of the user profile, with upgrade, remove, history and rollback actions.
+
+### Store
+
+![Nix store usage, GC roots by category, garbage collection and optimisation](images/store.png)
+
+Shows the store usage and the GC roots, and runs garbage collection and store optimisation.
+
+### Settings
+
+![Form for the NixOS rebuild configuration](images/settings.png)
+
+Edits the NixOS rebuild configuration saved in `~/.config/nix-dashboard/config.toml`.
+
 ## Tech Stack
 
 ### Frontend
